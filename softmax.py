@@ -8,27 +8,15 @@ class Softmax(interface.ILayer):
         self.biases = np.zeros(layer_size)
 
     def forward(self, inputs):
-        inputs = np.array(inputs)
         self.last_input_shape = inputs.shape
-        self.inputs = self.flatten(inputs)
+        self.inputs = inputs.flatten()
         self.last_input = self.inputs
-
-        #input_len, nodes = self.weights.shape
 
         totals = np.dot(self.inputs, self.weights) + self.biases
         self.last_totals = totals
 
         exp = np.exp(totals)
         return exp / np.sum(exp, axis=0)
-
-    def flatten(self, input):
-        output = []
-        for filter in range(len(input)):
-            for row in range(len(input[0])):
-                for column in range(len(input[0][0])):
-                    #for i in range(len(input[0])):
-                        output.append(input[filter][row][column])
-        return output
 
     def backprop(self, d_L_d_out, learn_rate):
         '''

@@ -9,13 +9,8 @@ class Conv(interface.ILayer):
         self.filter_size = filter_size
         self.stride = stride
         self.padding = padding
-        #self.filters = []
-        self.bias = []
+        self.bias = numpy.random.randint(2, size=num_filters)
         self.filters = numpy.random.randn(num_filters, filter_size, filter_size) / (filter_size * filter_size)
-        for i in range(num_filters):
-            #self.filters.append([[random.random() for k in range(filter_size)] for j in range(filter_size)])
-
-            self.bias.append(0 if random.random() < 0.5 else 1)
 
     def setFilters(self, filters):
         self.filters = filters
@@ -29,67 +24,53 @@ class Conv(interface.ILayer):
         return output
 
     def convlove(self, input):
-        #width = (len(input[0][0]) + 2 * self.padding - self.filter_size + self.stride) // self.stride
-        #height = (len(input[0]) + 2 * self.padding - self.filter_size + self.stride) // self.stride
-        #depth = len(input)
-        width = (input.shape[0] + 2 * self.padding - self.filter_size + self.stride) // self.stride
-        height = (input.shape[1] + 2 * self.padding - self.filter_size + self.stride) // self.stride
-        depth = 1 if input.ndim <= 2 else input.shape[2]
-        output = []
-        #output = numpy.zeros(input.shape)
-        output = self.zeros(width, height, output)
-        # for i in range(self.num_filters):
-        #     output.append([[0 for k in range(width)] for j in range(height)])
-        for filter in range(len(self.filters)):
-            for row in range(height):
-                for column in range(width):
-                    result = 0
-                    for i in range(depth):
-                        # rows = []
-                        # firstZeros = (self.padding - (row * self.stride)) if (
-                        #             self.padding - (row * self.stride)) < self.filter_size else self.filter_size
-                        # firstZeros = 0 if firstZeros < 0 else firstZeros
-                        # #lastZeros = (self.padding - (len(input[0]) + 2 * self.padding - (row * self.stride + self.filter_size))) if (
-                        # #           self.padding - (len(input[0]) + 2 * self.padding - (row * self.stride + self.filter_size))) < self.filter_size else self.filter_size
-                        # lastZeros = (self.padding - (input.shape[1] + 2 * self.padding - (row * self.stride + self.filter_size))) if (
-                        #            self.padding - (input.shape[1] + 2 * self.padding - (row * self.stride + self.filter_size))) < self.filter_size else self.filter_size
-                        # lastZeros = 0 if lastZeros < 0 else lastZeros
-                        # leftZeros = (self.padding - (column * self.stride)) if (
-                        #              self.padding - (column * self.stride)) < self.filter_size else self.filter_size
-                        # leftZeros = 0 if leftZeros < 0 else leftZeros
-                        # #rightZeros = (self.padding - (len(input[0][0]) + 2 * self.padding - (column * self.stride + self.filter_size))) if (
-                        # #              self.padding - (len(input[0][0]) + 2 * self.padding - (column * self.stride + self.filter_size))) < self.filter_size else self.filter_size
-                        # rightZeros = (self.padding - (input.shape[0] + 2 * self.padding - (column * self.stride + self.filter_size))) if (
-                        #               self.padding - (input.shape[0] + 2 * self.padding - (column * self.stride + self.filter_size))) < self.filter_size else self.filter_size
-                        # rightZeros = 0 if rightZeros < 0 else rightZeros
-                        # beginRow = (row * self.stride + firstZeros - self.padding) if (
-                        #             row * self.stride + firstZeros - self.padding) > 0 else 0
-                        # endRow = ((row * self.stride + self.filter_size) - lastZeros - self.padding) if ((
-                        #            row * self.stride + self.filter_size) - lastZeros - self.padding) > 0 else 0
-                        # beginCol = (column * self.stride + leftZeros - self.padding) if (
-                        #             column * self.stride + leftZeros - self.padding) > 0 else 0
-                        # endCol = ((column * self.stride + self.filter_size) - rightZeros - self.padding) if ((
-                        #            column * self.stride + self.filter_size) - rightZeros - self.padding) > 0 else 0
-                        # for j in range(firstZeros):
-                        #     rows.append([0 for k in range(self.filter_size)])
-                        # for j in range(endRow - beginRow):
-                        #     tmpRow = []
-                        #     for k in range(leftZeros):
-                        #         tmpRow.append(0)
-                        #     for k in range(endCol - beginCol):
-                        #         #tmpRow.append(input[i][beginRow + j][beginCol + k])
-                        #         tmpRow.append(input[beginRow + j][beginCol + k])
-                        #     for k in range(rightZeros):
-                        #         tmpRow.append(0)
-                        #     rows.append(tmpRow)
-                        # for j in range(lastZeros):
-                        #     rows.append([0 for k in range(self.filter_size)])
-                        rows = input[row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size]
-                        #result += numpy.sum(numpy.array(rows) * self.filters[filter][i])
-                        result += numpy.sum(numpy.array(rows) * self.filters[filter])
-                    #print(filter, row, column)
-                    output[filter][row][column] = result + self.bias[filter]
+        if input.ndim <= 2:
+            self.width = (input.shape[0] + 2 * self.padding - self.filter_size + self.stride) // self.stride
+            self.height = (input.shape[1] + 2 * self.padding - self.filter_size + self.stride) // self.stride
+            self.depth = 1
+        else:
+            self.depth = input.shape[0]
+            self.width = (input.shape[1] + 2 * self.padding - self.filter_size + self.stride) // self.stride
+            self.height = (input.shape[2] + 2 * self.padding - self.filter_size + self.stride) // self.stride
+        if self.padding > 0:
+            tmp = numpy.zeros([input.shape[0] + self.padding*2, input.shape[1] + self.padding*2])
+            tmp[self.padding:tmp.shape[0] - self.padding, self.padding:tmp.shape[1] - self.padding] = input
+            self.input = tmp
+        else:
+            self.input = input
+
+        output = numpy.zeros([self.num_filters, self.width + self.padding*2, self.height + self.padding*2])
+
+        for row in range(self.height):
+            for column in range(self.width):
+                rows = self.input[row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size]
+                for filter in range(len(self.filters)):
+                    output[filter][row][column] = numpy.sum(rows * self.filters[filter]) + self.bias[filter]
         return output
+
+    def backprop(self, d_L_d_out, learn_rate):
+        '''
+        Performs a backward pass of the conv layer.
+        - d_L_d_out is the loss gradient for this layer's outputs.
+        - learn_rate is a float.
+        '''
+        d_L_d_filters = numpy.zeros(self.filters.shape)
+
+        for row in range(self.height):
+            for column in range(self.width):
+                rows = self.input[row * self.stride: row * self.stride + self.filter_size,
+                       column * self.stride:column * self.stride + self.filter_size]
+                for filter in range(len(self.filters)):
+                        d_L_d_filters[filter] += d_L_d_out[filter, row, column] * rows
+
+        # Update filters
+        self.filters -= learn_rate * d_L_d_filters
+
+        # We aren't returning anything here since we use Conv3x3 as
+        # the first layer in our CNN. Otherwise, we'd need to return
+        # the loss gradient for this layer's inputs, just like every
+        # other layer in our CNN.
+        return None
 
     def forward(self, prev_layer):
         return self.convlove(prev_layer)

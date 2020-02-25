@@ -13,17 +13,8 @@ class CNN:
 
     def forwardImage(self, image, label):
         output = ((image / 255) - 0.5)
-        #output = image
         for layer in self.layers:
-            #print(output)
             output = layer.forward(output)
-
-        #print(output)
-        #output = self.flatten(output)
-        #output = output.flatten()
-        #print(output)
-        #output = self.softmax.evaluate(output)
-        #print(output)
         loss = -np.log(output[label])
         acc = 1 if np.argmax(output) == label else 0
         return output, loss, acc
@@ -52,6 +43,10 @@ class CNN:
         # Backprop
 
         layer = self.layers[len(self.layers) - 1]
+        gradient = layer.backprop(gradient, lr)
+        layer = self.layers[len(self.layers) - 2]
+        gradient = layer.backward(gradient)
+        layer = self.layers[len(self.layers) - 3]
         gradient = layer.backprop(gradient, lr)
         # TODO: backprop MaxPool2 layer
         # TODO: backprop Conv3x3 layer
