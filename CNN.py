@@ -37,7 +37,7 @@ class CNN:
         out, loss, acc = self.forwardImage(im, label)
 
         # Calculate initial gradient
-        gradient = np.zeros(10)
+        gradient = np.zeros(self.num_outputs)
         gradient[label] = -1 / out[label]
 
         # Backprop
@@ -45,8 +45,14 @@ class CNN:
         layer = self.layers[len(self.layers) - 1]
         gradient = layer.backprop(gradient, lr)
         layer = self.layers[len(self.layers) - 2]
-        gradient = layer.backward(gradient)
+        gradient = layer.backprop(gradient, lr)
         layer = self.layers[len(self.layers) - 3]
+        gradient = layer.backward(gradient)
+        layer = self.layers[len(self.layers) - 4]
+        gradient = layer.backprop(gradient, lr)
+        layer = self.layers[len(self.layers) - 5]
+        gradient = layer.backward(gradient)
+        layer = self.layers[len(self.layers) - 6]
         gradient = layer.backprop(gradient, lr)
         # TODO: backprop MaxPool2 layer
         # TODO: backprop Conv3x3 layer

@@ -5,17 +5,25 @@ import CNN
 import convolutional
 import pool
 import softmax
+import cnnLayer
 
 test_images = mnist.test_images()[:1000]
 test_labels = mnist.test_labels()[:1000]
 train_images = mnist.train_images()[:1000]
 train_labels = mnist.train_labels()[:1000]
 cnn = CNN.CNN(10)
-conv = convolutional.Conv(8,3)
-pool = pool.Pool()
-sm = softmax.Softmax(10, 13 * 13 * 8)
-cnn.add(conv)
-cnn.add(pool)
+conv1 = convolutional.Conv(1,6,5)
+pool1 = pool.Pool()
+conv2 = convolutional.Conv(6,16,5)
+pool2 = pool.Pool()
+conv3 = convolutional.Conv(16,120,4)
+#fc1 = cnnLayer.CNNLayer9(120, 4 * 4 * 16, 'tanh', 16)
+sm = softmax.Softmax(10, 120)
+cnn.add(conv1)
+cnn.add(pool1)
+cnn.add(conv2)
+cnn.add(pool2)
+cnn.add(conv3)
 cnn.add(sm)
 # Train!
 # loss = 0
@@ -54,7 +62,6 @@ for epoch in range(3):
       )
       loss = 0
       num_correct = 0
-
     l, acc = cnn.train(im, label)
     loss += l
     num_correct += acc

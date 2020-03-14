@@ -6,6 +6,7 @@ class Softmax(interface.ILayer):
     def __init__(self, layer_size, input_len):
         self.weights = np.random.randn(input_len, layer_size) / input_len
         self.biases = np.zeros(layer_size)
+        self.epsilon = 1e-5
 
     def forward(self, inputs):
         self.last_input_shape = inputs.shape
@@ -15,7 +16,7 @@ class Softmax(interface.ILayer):
         totals = np.dot(self.inputs, self.weights) + self.biases
         self.last_totals = totals
 
-        exp = np.exp(totals)
+        exp = np.exp(totals - np.max(totals)) + self.epsilon
         return exp / np.sum(exp, axis=0)
 
     def backprop(self, d_L_d_out, learn_rate):
@@ -31,7 +32,7 @@ class Softmax(interface.ILayer):
                 continue
 
             # e^totals
-            t_exp = np.exp(self.last_totals)
+            t_exp = np.exp(self.last_totals - max(self.last_totals))
 
             # Sum of all e^totals
             S = np.sum(t_exp)
@@ -42,14 +43,16 @@ class Softmax(interface.ILayer):
 
             # Gradients of totals against weights/biases/input
             d_t_d_w = self.last_input
+            d_t_d_w = np.array(d_t_d_w)
             d_t_d_b = 1
             d_t_d_inputs = self.weights
 
             # Gradients of loss against totals
             d_L_d_t = gradient * d_out_d_t
-            d_t_d_w = np.array(d_t_d_w)
             d_L_d_t = np.array(d_L_d_t)
+
             # Gradients of loss against weights/biases/input
+            s = d_t_d_w[np.newaxis].T
             d_L_d_w = d_t_d_w[np.newaxis].T @ d_L_d_t[np.newaxis]
             d_L_d_b = d_L_d_t * d_t_d_b
             d_L_d_inputs = d_t_d_inputs @ d_L_d_t

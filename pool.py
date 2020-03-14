@@ -35,7 +35,7 @@ class Pool(interface.ILayer):
             '''
         d_L_d_input = numpy.zeros(self.last_input.shape)
 
-        d, w, h = self.last_output.shape
+        d, w, h = d_L_d_out.shape
 
         for i in range(d):
             for row in range(h):
@@ -43,37 +43,6 @@ class Pool(interface.ILayer):
                     row2 = int(self.output_indexes[i][row][column] // self.filter_size)
                     column2 = int(self.output_indexes[i][row][column] % self.filter_size)
 
-                    d_L_d_input[i][row * self.stride + row2][column * self.stride + column2] = self.last_output[i][row][column]
-
-        # TEST
-        # width = (self.last_input.shape[1] - self.filter_size + self.stride) // self.stride
-        # height = (self.last_input.shape[2] - self.filter_size + self.stride) // self.stride
-        # depth = self.last_input.shape[0]
-        # output = numpy.zeros([depth, height, width])
-        # self.output_indexes = numpy.zeros(output.shape)
-        # for i in range(depth):
-        #     for row in range(height):
-        #         for column in range(width):
-        #             partialMatrix = self.last_input[i][row * self.stride: row * self.stride + self.filter_size,
-        #                             column * self.stride:column * self.stride + self.filter_size]
-        #
-        #             partialMatrix2 = d_L_d_input[i][row * self.stride: row * self.stride + self.filter_size,
-        #                             column * self.stride:column * self.stride + self.filter_size]
-        #             if (numpy.max(partialMatrix) < 0):
-        #                 if (numpy.max(partialMatrix) == numpy.min(partialMatrix2)):
-        #                     if (numpy.argmax(partialMatrix) == numpy.argmin(partialMatrix2)):
-        #                         continue
-        #                     else:
-        #                         print("do riti 2")
-        #                 else:
-        #                     print("do riti")
-        #             else:
-        #                 if (numpy.max(partialMatrix) == numpy.max(partialMatrix2)):
-        #                     if (numpy.argmax(partialMatrix) == numpy.argmax(partialMatrix2)):
-        #                         continue
-        #                     else:
-        #                         print("do riti 2")
-        #                 else:
-        #                     print("do riti")
+                    d_L_d_input[i][row * self.stride + row2][column * self.stride + column2] = d_L_d_out[i][row][column]
 
         return d_L_d_input

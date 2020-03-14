@@ -4,13 +4,14 @@ import numpy
 
 
 class Conv(interface.ILayer):
-    def __init__(self, num_filters, filter_size, stride = 1, padding = 0):
+    def __init__(self, prev_layer_size, num_filters, filter_size, stride = 1, padding = 0):
         self.num_filters = num_filters
         self.filter_size = filter_size
         self.stride = stride
         self.padding = padding
-        self.bias = numpy.random.randint(2, size=num_filters)
-        self.filters = numpy.random.randn(num_filters, filter_size, filter_size) / (filter_size * filter_size)
+        # self.bias = numpy.random.randint(2, size=(num_filters, prev_layer_size))
+        self.bias = numpy.random.randint(1, size=(num_filters, prev_layer_size))
+        self.filters = numpy.random.randn(num_filters, prev_layer_size, filter_size, filter_size) / (filter_size * filter_size)
 
     def setFilters(self, filters):
         self.filters = filters
@@ -25,27 +26,29 @@ class Conv(interface.ILayer):
 
     def convlove(self, input):
         if input.ndim <= 2:
-            self.width = (input.shape[0] + 2 * self.padding - self.filter_size + self.stride) // self.stride
-            self.height = (input.shape[1] + 2 * self.padding - self.filter_size + self.stride) // self.stride
-            self.depth = 1
-        else:
-            self.depth = input.shape[0]
-            self.width = (input.shape[1] + 2 * self.padding - self.filter_size + self.stride) // self.stride
-            self.height = (input.shape[2] + 2 * self.padding - self.filter_size + self.stride) // self.stride
+            input = input[numpy.newaxis]
+        self.depth = input.shape[0]
+        self.width = (input.shape[1] + 2 * self.padding - self.filter_size + self.stride) // self.stride
+        self.height = (input.shape[2] + 2 * self.padding - self.filter_size + self.stride) // self.stride
+
         if self.padding > 0:
-            tmp = numpy.zeros([input.shape[0] + self.padding*2, input.shape[1] + self.padding*2])
-            tmp[self.padding:tmp.shape[0] - self.padding, self.padding:tmp.shape[1] - self.padding] = input
+            tmp = numpy.zeros([input.shape[0], input.shape[1] + self.padding*2, input.shape[2] + self.padding*2])
+            tmp[:, self.padding:tmp.shape[1] - self.padding, self.padding:tmp.shape[2] - self.padding] = input
             self.input = tmp
         else:
             self.input = input
 
-        output = numpy.zeros([self.num_filters, self.width + self.padding*2, self.height + self.padding*2])
+        output = numpy.zeros([self.num_filters, self.width, self.height])
+
+        self.filters = numpy.flip(self.filters, 0)
+        self.filters = numpy.flip(self.filters, 1)
 
         for row in range(self.height):
             for column in range(self.width):
-                rows = self.input[row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size]
-                for filter in range(len(self.filters)):
-                    output[filter][row][column] = numpy.sum(rows * self.filters[filter]) + self.bias[filter]
+                for d in range(self.depth):
+                    rows = self.input[d, row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size]
+                    for filter in range(self.num_filters):
+                        output[filter][row][column] += numpy.sum(rows * self.filters[filter, d]) + self.bias[filter, d]
         return output
 
     def backprop(self, d_L_d_out, learn_rate):
@@ -58,19 +61,30 @@ class Conv(interface.ILayer):
 
         for row in range(self.height):
             for column in range(self.width):
-                rows = self.input[row * self.stride: row * self.stride + self.filter_size,
-                       column * self.stride:column * self.stride + self.filter_size]
-                for filter in range(len(self.filters)):
-                        d_L_d_filters[filter] += d_L_d_out[filter, row, column] * rows
+                for d in range(self.depth):
+                    rows = self.input[d, row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size]
+                    for filter in range(self.num_filters):
+                            d_L_d_filters[filter, d] += d_L_d_out[filter, row, column] * rows
+
+        # Pad d_L_d_out to size of input
+        d_out_pad = numpy.zeros([d_L_d_out.shape[0], self.input.shape[1] + self.filter_size - self.stride, self.input.shape[2] + self.filter_size - self.stride])
+        pad = (d_out_pad.shape[1] - d_L_d_out.shape[1]) // 2
+        ddd = d_out_pad[:, pad:d_out_pad.shape[1] - pad, pad:d_out_pad.shape[2] - pad]
+        d_out_pad[:, pad:d_out_pad.shape[1] - pad, pad:d_out_pad.shape[2] - pad] = d_L_d_out
+
+        d_L_d_input = numpy.zeros(self.input.shape)
+
+        for row in range(self.height):
+            for column in range(self.width):
+                for d in range(self.depth):
+                    for filter in range(self.num_filters):
+                        rows = d_out_pad[filter, row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size]
+                        d_L_d_input[d][row][column] += numpy.sum(rows * self.filters[filter, d]) + self.bias[filter, d]
 
         # Update filters
         self.filters -= learn_rate * d_L_d_filters
 
-        # We aren't returning anything here since we use Conv3x3 as
-        # the first layer in our CNN. Otherwise, we'd need to return
-        # the loss gradient for this layer's inputs, just like every
-        # other layer in our CNN.
-        return None
+        return d_L_d_input
 
     def forward(self, prev_layer):
         return self.convlove(prev_layer)
