@@ -89,5 +89,5 @@ class Conv(interface.ILayer):
     def forward(self, prev_layer):
         return self.convlove(prev_layer)
 
-    def backward(self, prev_layer):
-        raise NotImplementedError
+    def backward(self, prev_layer, leran_rate):
+        return self.backprop(prev_layer, leran_rate)

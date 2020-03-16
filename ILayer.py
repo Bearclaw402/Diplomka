@@ -7,5 +7,5 @@ class ILayer:
         raise NotImplementedError
 
     @abstractmethod
-    def backward(self, prev_layer):
+    def backward(self, prev_layer, leran_rate):
         raise NotImplementedError

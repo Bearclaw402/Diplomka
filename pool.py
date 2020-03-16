@@ -27,7 +27,7 @@ class Pool(interface.ILayer):
     def forward(self, prev_layer):
         return self.maxPooling(prev_layer)
 
-    def backward(self, d_L_d_out):
+    def backward(self, d_L_d_out, leran_rate):
         '''
             Performs a backward pass of the maxpool layer.
             Returns the loss gradient for this layer's inputs.

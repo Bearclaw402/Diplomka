@@ -42,18 +42,19 @@ class CNN:
 
         # Backprop
 
-        layer = self.layers[len(self.layers) - 1]
-        gradient = layer.backprop(gradient, lr)
-        layer = self.layers[len(self.layers) - 2]
-        gradient = layer.backprop(gradient, lr)
-        layer = self.layers[len(self.layers) - 3]
-        gradient = layer.backward(gradient)
-        layer = self.layers[len(self.layers) - 4]
-        gradient = layer.backprop(gradient, lr)
-        layer = self.layers[len(self.layers) - 5]
-        gradient = layer.backward(gradient)
-        layer = self.layers[len(self.layers) - 6]
-        gradient = layer.backprop(gradient, lr)
+        for i in range(len(self.layers)):
+            layer = self.layers[len(self.layers) - (i + 1)]
+            gradient = layer.backward(gradient, lr)
+        # layer = self.layers[len(self.layers) - 2]
+        # gradient = layer.backprop(gradient, lr)
+        # layer = self.layers[len(self.layers) - 3]
+        # gradient = layer.backward(gradient)
+        # layer = self.layers[len(self.layers) - 4]
+        # gradient = layer.backprop(gradient, lr)
+        # layer = self.layers[len(self.layers) - 5]
+        # gradient = layer.backward(gradient)
+        # layer = self.layers[len(self.layers) - 6]
+        # gradient = layer.backprop(gradient, lr)
         # TODO: backprop MaxPool2 layer
         # TODO: backprop Conv3x3 layer
 

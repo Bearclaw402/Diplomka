@@ -9,6 +9,7 @@ class Softmax(interface.ILayer):
         self.epsilon = 1e-5
 
     def forward(self, inputs):
+        inputs = np.array(inputs)
         self.last_input_shape = inputs.shape
         self.inputs = inputs.flatten()
         self.last_input = self.inputs
@@ -18,6 +19,9 @@ class Softmax(interface.ILayer):
 
         exp = np.exp(totals - np.max(totals)) + self.epsilon
         return exp / np.sum(exp, axis=0)
+
+    def backward(self, prev_layer, leran_rate):
+        return self.backprop(prev_layer, leran_rate)
 
     def backprop(self, d_L_d_out, learn_rate):
         '''

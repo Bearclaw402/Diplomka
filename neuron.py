@@ -10,11 +10,11 @@ class Neuron:
 
     def __calculate_potential__(self, inputs):
         self.potential = 0.0
-        if isinstance(inputs, list):
-            for i in range(len(inputs)):
-                self.potential += inputs[i] * self.weights[i]
-        else:
-            self.potential = inputs
+        # if isinstance(inputs, list):
+        for i in range(len(inputs)):
+            self.potential += inputs[i] * self.weights[i]
+        # else:
+        #     self.potential = inputs
         return self.potential
 
     def activate(self, inputs, activation_function):
