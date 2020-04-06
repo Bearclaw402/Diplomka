@@ -1,5 +1,3 @@
-import layer as l
-import softmax as sm
 import numpy as np
 
 class CNN:
@@ -18,12 +16,6 @@ class CNN:
         loss = -np.log(output[label])
         acc = 1 if np.argmax(output) == label else 0
         return output, loss, acc
-
-    # def train(self):
-    #     gradient = np.zeros(self.num_outputs)
-    #     gradient = self.softmax.backward(gradient)
-    #     for layer in self.layers:
-    #         gradient = layer.backward(gradient)
 
     def train(self, im, label, lr=.005):
         '''
@@ -45,26 +37,5 @@ class CNN:
         for i in range(len(self.layers)):
             layer = self.layers[len(self.layers) - (i + 1)]
             gradient = layer.backward(gradient, lr)
-        # layer = self.layers[len(self.layers) - 2]
-        # gradient = layer.backprop(gradient, lr)
-        # layer = self.layers[len(self.layers) - 3]
-        # gradient = layer.backward(gradient)
-        # layer = self.layers[len(self.layers) - 4]
-        # gradient = layer.backprop(gradient, lr)
-        # layer = self.layers[len(self.layers) - 5]
-        # gradient = layer.backward(gradient)
-        # layer = self.layers[len(self.layers) - 6]
-        # gradient = layer.backprop(gradient, lr)
-        # TODO: backprop MaxPool2 layer
-        # TODO: backprop Conv3x3 layer
 
         return loss, acc
-
-    def flatten(self, input):
-        output = []
-        for filter in range(len(input)):
-            for row in range(len(input[0])):
-                for column in range(len(input[0][0])):
-                    #for i in range(len(input[0])):
-                        output.append(input[filter][row][column])
-        return output

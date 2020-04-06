@@ -9,7 +9,7 @@ class CNNLayer(interface.ILayer):
         self.layer_size = layer_size
         self.prev_layer_size = prev_layer_size
 
-    def backprop(self, d_L_d_out, learn_rate):
+    def backpropFC(self, d_L_d_out, learn_rate):
         d_L_d_t = numpy.zeros(self.layer_size)
         self.weights = numpy.zeros([self.layer_size, self.prev_layer_size])
         for neuron in range(len(self.layer.neurons)):
@@ -33,7 +33,6 @@ class CNNLayer(interface.ILayer):
             sdsd = d_L_d_w.T
             self.layer.neurons[neuron].weights -= learn_rate * sdsd[neuron].T
 
-        # self.weights -= learn_rate * d_L_d_w
         # self.biases -= learn_rate * d_L_d_b
 
         return d_L_d_inputs.reshape(self.last_input_shape)
@@ -45,4 +44,4 @@ class CNNLayer(interface.ILayer):
         return self.layer.evaluate(prev_layer, self.activation)
 
     def backward(self, prev_layer, leran_rate):
-        return self.backprop(prev_layer, leran_rate)
+        return self.backpropFC(prev_layer, leran_rate)

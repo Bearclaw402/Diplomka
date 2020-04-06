@@ -1,24 +1,23 @@
 import mnist
 import numpy
+from CNN import CNN
+from convolutional import Conv
+from pool import Pool
+from softmax import Softmax
+from cnnLayer import CNNLayer
 
-import CNN
-import convolutional
-import pool
-import softmax
-import cnnLayer
-
-test_images = mnist.test_images()[:1000]
-test_labels = mnist.test_labels()[:1000]
-train_images = mnist.train_images()[:1000]
-train_labels = mnist.train_labels()[:1000]
-cnn = CNN.CNN(10)
-conv1 = convolutional.Conv(1,6,5)
-pool1 = pool.Pool()
-conv2 = convolutional.Conv(6,16,5)
-pool2 = pool.Pool()
-conv3 = convolutional.Conv(16,120,4)
-fc1 = cnnLayer.CNNLayer(84, 120, 'tanh')
-sm = softmax.Softmax(10, 84)
+test_images = mnist.test_images()[:2000]
+test_labels = mnist.test_labels()[:2000]
+train_images = mnist.train_images()[:2000]
+train_labels = mnist.train_labels()[:2000]
+cnn = CNN(10)
+conv1 = Conv(1,6,5)
+pool1 = Pool(2,2,'avg')
+conv2 = Conv(6,16,5)
+pool2 = Pool(2,2,'avg')
+conv3 = Conv(16,120,4)
+fc1 = CNNLayer(84, 120, 'tanh')
+sm = Softmax(10, 84)
 cnn.add(conv1)
 cnn.add(pool1)
 cnn.add(conv2)
@@ -26,25 +25,9 @@ cnn.add(pool2)
 cnn.add(conv3)
 cnn.add(fc1)
 cnn.add(sm)
-# Train!
-# loss = 0
-# num_correct = 0
-# for i, (im, label) in enumerate(zip(train_images, train_labels)):
-#   if i > 0 and (i + 1) % 100 == 0:
-#     print(
-#       '[Step %d] Past 100 steps: Average Loss %.3f | Accuracy: %d%%' %
-#       (i + 1, loss / 100, num_correct)
-#     )
-#     loss = 0
-#     num_correct = 0
-#
-#   l, acc = cnn.train(im, label)
-#   loss += l
-#   num_correct += acc
-# #print(output)
 
 # Train the CNN for 3 epochs
-for epoch in range(3):
+for epoch in range(10):
   print('--- Epoch %d ---' % (epoch + 1))
 
   # Shuffle the training data

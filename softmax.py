@@ -7,6 +7,7 @@ class Softmax(interface.ILayer):
         self.weights = np.random.randn(input_len, layer_size) / input_len
         self.biases = np.zeros(layer_size)
         self.epsilon = 1e-5
+        # self.thresh = -500
 
     def forward(self, inputs):
         inputs = np.array(inputs)
@@ -16,14 +17,16 @@ class Softmax(interface.ILayer):
 
         totals = np.dot(self.inputs, self.weights) + self.biases
         self.last_totals = totals
-
+        # x = totals - np.max(totals)
+        # super_threshold_indices = x < self.thresh
+        # x[super_threshold_indices] = self.thresh
         exp = np.exp(totals - np.max(totals)) + self.epsilon
         return exp / np.sum(exp, axis=0)
 
     def backward(self, prev_layer, leran_rate):
-        return self.backprop(prev_layer, leran_rate)
+        return self.backpropSM(prev_layer, leran_rate)
 
-    def backprop(self, d_L_d_out, learn_rate):
+    def backpropSM(self, d_L_d_out, learn_rate):
         '''
         Performs a backward pass of the softmax layer.
         Returns the loss gradient for this layer's inputs.
@@ -36,7 +39,11 @@ class Softmax(interface.ILayer):
                 continue
 
             # e^totals
-            t_exp = np.exp(self.last_totals - max(self.last_totals))
+            # x = self.last_totals - np.max(self.last_totals)
+            # super_threshold_indices = x < self.thresh
+            # x[super_threshold_indices] = self.thresh
+            # t_exp = np.exp(self.last_totals - np.max(self.last_totals)) + self.epsilon
+            t_exp = np.exp(self.last_totals - np.max(self.last_totals))
 
             # Sum of all e^totals
             S = np.sum(t_exp)
