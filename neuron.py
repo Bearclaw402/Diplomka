@@ -3,9 +3,10 @@ import numpy as np
 
 
 class Neuron:
-    def __init__(self, prev_layer_size):
+    def __init__(self, prev_layer_size, seed):
         self.potential = 0.0
         self.activation = 0.0
+        random.seed(seed*2)
         self.weights = [random.random() - 0.5 if prev_layer_size > 0 else 1 for i in range(prev_layer_size if prev_layer_size > 0 else 1)]
 
     def __calculate_potential__(self, inputs):
@@ -13,7 +14,7 @@ class Neuron:
         # if isinstance(inputs, list):
         for i in range(len(inputs)):
             self.potential += inputs[i] * self.weights[i]
-        # else:
+            # else:
         #     self.potential = inputs
         return self.potential
 
@@ -38,7 +39,7 @@ class Neuron:
         return self.activation
 
     def derivative_relu(self):
-        return 1 if self.activation >= 0 else 0
+        return 1 if self.activation > 0 else 0
 
     def derivative_sigmoid(self):
         return self.activation * (1.0 - self.activation)

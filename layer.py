@@ -1,10 +1,12 @@
 from neuron import Neuron
+import numpy
 
 class Layer():
     def __init__(self, layer_size, prev_layer_size):
         self.outputs = [0] * layer_size
         self.prev_layer_size = prev_layer_size
-        self.neurons = [Neuron(prev_layer_size) for i in range(layer_size)]
+        numpy.random.seed(1000)
+        self.neurons = [Neuron(prev_layer_size, numpy.random.rand() * 1000) for i in range(layer_size)]
 
     def evaluate(self, inputs, activation_function):
         if self.prev_layer_size == 0:

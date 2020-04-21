@@ -1,4 +1,3 @@
-from keras.datasets import mnist
 from keras.utils import np_utils
 from keras.models import Sequential
 from keras import models, layers
@@ -60,27 +59,27 @@ model.add(layers.Dense(10, activation='softmax'))
 ss = keras.optimizers.sgd()
 model.compile(loss=keras.losses.categorical_crossentropy, optimizer=ss, metrics=["accuracy"])
 
-hist = model.fit(x=x_train,y=y_train, epochs=10, batch_size=1, validation_data=(x_test, y_test), verbose=1)
+hist = model.fit(x=x_train,y=y_train, epochs=10, batch_size=100, validation_data=(x_test, y_test), verbose=1)
 
 ######## EVALUATE ########
 test_score = model.evaluate(x_test, y_test)
 print("Test loss {:.4f}, accuracy {:.2f}%".format(test_score[0], test_score[1] * 100))
 
 ######## Visualize ########
-f, ax = plt.subplots()
-ax.plot([None] + hist.history['acc'], 'o-')
-ax.plot([None] + hist.history['val_acc'], 'x-')
-# Plot legend and use the best location automatically: loc = 0.
-ax.legend(['Train acc', 'Validation acc'], loc = 0)
-ax.set_title('Training/Validation acc per Epoch')
-ax.set_xlabel('Epoch')
-ax.set_ylabel('acc')
-
-f, ax = plt.subplots()
-ax.plot([None] + hist.history['loss'], 'o-')
-ax.plot([None] + hist.history['val_loss'], 'x-')
-# Plot legend and use the best location automatically: loc = 0.
-ax.legend(['Train Loss', 'Validation Loss'], loc = 0)
-ax.set_title('Training/Validation Loss per Epoch')
-ax.set_xlabel('Epoch')
-ax.set_ylabel('Loss')
+# f, ax = plt.subplots()
+# ax.plot([None] + hist.history['acc'], 'o-')
+# ax.plot([None] + hist.history['val_acc'], 'x-')
+# # Plot legend and use the best location automatically: loc = 0.
+# ax.legend(['Train acc', 'Validation acc'], loc = 0)
+# ax.set_title('Training/Validation acc per Epoch')
+# ax.set_xlabel('Epoch')
+# ax.set_ylabel('acc')
+#
+# f, ax = plt.subplots()
+# ax.plot([None] + hist.history['loss'], 'o-')
+# ax.plot([None] + hist.history['val_loss'], 'x-')
+# # Plot legend and use the best location automatically: loc = 0.
+# ax.legend(['Train Loss', 'Validation Loss'], loc = 0)
+# ax.set_title('Training/Validation Loss per Epoch')
+# ax.set_xlabel('Epoch')
+# ax.set_ylabel('Loss')

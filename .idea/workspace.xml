@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c2d7d9d4-1e8b-4577-a2d1-ae9d3e8c5d2f" name="Default Changelist" comment="Fully Connected layer">
-      <change afterPath="$PROJECT_DIR$/Diplomová práca.docx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/keras_test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model_gen_alg.py" afterDir="false" />
+    <list default="true" id="c2d7d9d4-1e8b-4577-a2d1-ae9d3e8c5d2f" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ILayer.py" beforeDir="false" afterPath="$PROJECT_DIR$/ILayer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cnnLayer.py" beforeDir="false" afterPath="$PROJECT_DIR$/cnnLayer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/convolutional.py" beforeDir="false" afterPath="$PROJECT_DIR$/convolutional.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/keras_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/keras_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neuron.py" beforeDir="false" afterPath="$PROJECT_DIR$/neuron.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pool.py" beforeDir="false" afterPath="$PROJECT_DIR$/pool.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/softmax.py" beforeDir="false" afterPath="$PROJECT_DIR$/softmax.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
@@ -38,7 +39,7 @@
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$USER_HOME$/Downloads/MLP/MLP" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="PyConsoleOptionsProvider">
@@ -172,7 +173,28 @@
       <workItem from="1585644494893" duration="12120000" />
       <workItem from="1585726956866" duration="6975000" />
       <workItem from="1585735099738" duration="12018000" />
-      <workItem from="1585915295758" duration="54391000" />
+      <workItem from="1585915295758" duration="54579000" />
+      <workItem from="1586335116662" duration="2758000" />
+      <workItem from="1586352334153" duration="4280000" />
+      <workItem from="1586424788403" duration="1089000" />
+      <workItem from="1586436032711" duration="13504000" />
+      <workItem from="1586528508576" duration="1200000" />
+      <workItem from="1586591519533" duration="13552000" />
+      <workItem from="1586621723490" duration="139000" />
+      <workItem from="1586679779226" duration="11476000" />
+      <workItem from="1586763599371" duration="14934000" />
+      <workItem from="1586853861297" duration="19422000" />
+      <workItem from="1586942437467" duration="10394000" />
+      <workItem from="1586962194086" duration="5021000" />
+      <workItem from="1586968129984" duration="1671000" />
+      <workItem from="1586970087240" duration="699000" />
+      <workItem from="1586970839701" duration="353000" />
+      <workItem from="1586971210504" duration="2393000" />
+      <workItem from="1587028185172" duration="13103000" />
+      <workItem from="1587111711965" duration="111000" />
+      <workItem from="1587111837082" duration="3819000" />
+      <workItem from="1587131944116" duration="28806000" />
+      <workItem from="1587313276761" duration="22793000" />
     </task>
     <task id="LOCAL-00001" summary="First conv, pool, softmax train.">
       <created>1582651247846</created>
@@ -195,7 +217,14 @@
       <option name="project" value="LOCAL" />
       <updated>1584357201133</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Faster convolution and backpropagation.&#10;Keras test for comparation.&#10;Word added.">
+      <created>1586197771608</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1586197771608</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -218,14 +247,16 @@
     <MESSAGE value="First conv, pool, softmax train." />
     <MESSAGE value="Convolution backpropagation fix" />
     <MESSAGE value="Fully Connected layer" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fully Connected layer" />
+    <MESSAGE value="Faster convolution and backpropagation.&#10;Keras test for comparation.&#10;Word added." />
+    <option name="LAST_COMMIT_MESSAGE" value="Faster convolution and backpropagation.&#10;Keras test for comparation.&#10;Word added." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/mlp.py</url>
-          <option name="timeStamp" value="1" />
+          <url>file://$PROJECT_DIR$/CNN.py</url>
+          <line>101</line>
+          <option name="timeStamp" value="115" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -238,18 +269,14 @@
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
-        <watch expression="output" />
-        <watch expression="self.input" />
-        <watch expression="d_L_d_out" />
-        <watch expression="d_L_d_input" />
-        <watch expression="self" />
-        <watch expression="self" />
+        <watch expression="gradients" />
+        <watch expression="out" />
       </configuration>
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Diplomka$keras_test.coverage" NAME="keras_test Coverage Results" MODIFIED="1586103626068" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Diplomka$keras_test.coverage" NAME="keras_test Coverage Results" MODIFIED="1587112788677" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Diplomka$model_gen_alg.coverage" NAME="model_gen_alg Coverage Results" MODIFIED="1584606653148" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Diplomka$test.coverage" NAME="test Coverage Results" MODIFIED="1586193721339" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Diplomka$test.coverage" NAME="test Coverage Results" MODIFIED="1587485151883" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

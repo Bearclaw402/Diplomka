@@ -11,11 +11,41 @@ class CNN:
 
     def forwardImage(self, image, label):
         output = ((image / 255) - 0.5)
+        # i = 0
         for layer in self.layers:
+            # i += 1
+            # if i >=len(self.layers):
+            #     output = layer.forward(output[0])
+                # output = output[0]
+            # else:
             output = layer.forward(output)
         loss = -np.log(output[label])
         acc = 1 if np.argmax(output) == label else 0
+        # acc = 1 if np.argmax(output) == label[0] else 0
         return output, loss, acc
+
+    def forwardBatch(self, batch, labels):
+        output = ((batch / 255) - 0.5)
+        # out2 = output[0]
+        for i in range(0, len(self.layers) - 1):
+            output = self.layers[i].forward(output)
+        total_loss = 0.0
+        total_acc = 0.0
+        outs = []
+        for i in range(len(batch)):
+            out = self.layers[- 1].forward(output[i])
+            loss = -np.log(out[labels[i]])
+            acc = 1 if np.argmax(out) == labels[i] else 0
+            total_acc += acc
+            total_loss += loss
+            gradient = np.zeros(self.num_outputs)
+            gradient[labels[i]] = -1 / out[labels[i]]
+
+            # Backprop
+            outs.append(self.layers[-1].backward(gradient))
+            self.layers[-1].updateWeights(0.005 * len(batch))
+            # outs.append(out)
+        return outs, total_loss, total_acc
 
     def train(self, im, label, lr=.005):
         '''
@@ -25,17 +55,63 @@ class CNN:
         - label is a digit
         - lr is the learning rate
         '''
-        # Forward
-        out, loss, acc = self.forwardImage(im, label)
+        batch_size = im.shape[0]
+        avg_loss = 0.0
+        avg_acc = 0.0
+        for i in range(batch_size):
+            # Forward
+            out, loss, acc = self.forwardImage(im[i], label[i])
 
-        # Calculate initial gradient
-        gradient = np.zeros(self.num_outputs)
-        gradient[label] = -1 / out[label]
+            avg_loss += loss
+            avg_acc += acc
 
-        # Backprop
+            # Calculate initial gradient
+            gradient = np.zeros(self.num_outputs)
+            gradient[label[i]] = -1 / out[label[i]]
 
-        for i in range(len(self.layers)):
-            layer = self.layers[len(self.layers) - (i + 1)]
-            gradient = layer.backward(gradient, lr)
+            # Backprop
+
+            for i in range(len(self.layers)- 1, 0, -1):
+                layer = self.layers[i]
+                gradient = layer.backward(gradient)
+
+        for i in range(len(self.layers)- 1, 0, -1):
+            layer = self.layers[i]
+            layer.updateWeights(lr * batch_size)
+        return avg_loss, avg_acc
+
+    def train2(self, im, label, lr=.005):
+        batch_size = im.shape[0]
+        gradients = []
+        avg_loss = 0.0
+        avg_acc = 0.0
+        for i in range(batch_size):
+            # Forward
+            out, loss, acc = self.forwardImage(im[i], label[i])
+            avg_loss += loss
+            avg_acc += acc
+
+            # Calculate initial gradient
+            gradient = np.zeros(self.num_outputs)
+            gradient[label[i]] = -1 / out[label[i]]
+
+            # Backprop
+            gradients.append(self.layers[-1].backward(gradient))
+            self.layers[-1].updateWeights(lr * batch_size)
+
+        for i in range(len(self.layers)- 2, 0, -1):
+            layer = self.layers[i]
+            gradients = layer.backward(gradients)
+            layer.updateWeights(lr * batch_size)
+
+        return avg_loss, avg_acc
+
+    def train3(self, im, label, lr=.005):
+        batch_size = im.shape[0]
+        gradients, loss, acc = self.forwardBatch(im, label)
+        for i in range(len(self.layers)- 2, 0, -1):
+            layer = self.layers[i]
+            gradients = layer.backward(gradients)
+            layer.updateWeights(lr * batch_size)
 
         return loss, acc
