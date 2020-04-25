@@ -6,6 +6,7 @@ from convolutional import Conv
 from pool import Pool
 from softmax import Softmax
 from cnnLayer import CNNLayer
+from dense import Dense
 from PIL import Image
 from shutil import copyfile
 import csv
@@ -21,7 +22,8 @@ def leNet():
   pool2 = Pool(2,2,'avg')
   conv3 = Conv(16,120,4)
   # pool3 = Pool(2,2,'max')
-  fc1 = CNNLayer(84, 120, 'tanh')
+  # fc1 = CNNLayer(84, 120, 'tanh')
+  fc1 = Dense(84, 120, 'tanh')
   sm = Softmax(10, 84)
   cnn.add(conv1)
   cnn.add(pool1)
@@ -63,10 +65,10 @@ def mnist_test():
 
   cnn = leNet()
 
-  test_images = mnist.test_images()[:2000]
-  test_labels = mnist.test_labels()[:2000]
-  train_images = mnist.train_images()[:2000]
-  train_labels = mnist.train_labels()[:2000]
+  test_images = mnist.test_images()[:5000]
+  test_labels = mnist.test_labels()[:5000]
+  train_images = mnist.train_images()[:5000]
+  train_labels = mnist.train_labels()[:5000]
 
   numpy.random.seed(1000)
   for epoch in range(3):
@@ -80,10 +82,10 @@ def mnist_test():
     # Train!
     loss = 0
     num_correct = 0
-    batch_size = 10
+    batch_size = 1
     # for i, (im, label) in enumerate(zip(train_images, train_labels)):
     for i in range(len(train_labels) // batch_size):
-      if i > 0 and i % 10 == 0:
+      if i > 0 and i % 100 == 0:
       # if i > 0:
         print(
           '[Step %d] Past %d steps: Average Loss %.3f | Accuracy: %d%%' %
@@ -103,12 +105,14 @@ def mnist_test():
   print('\n--- Testing the CNN ---')
   loss = 0
   num_correct = 0
-  for im, label in zip(test_images, test_labels):
-    _, l, acc = cnn.forwardImage(im, label)
-    loss += l
-    num_correct += acc
+  # for im, label in zip(test_images, test_labels):
+  #   _, l, acc = cnn.forwardImage(im, label)
+  #   loss += l
+  #   num_correct += acc
   #
-  # # _, loss, num_correct = cnn.forwardBatch(test_images, test_labels)
+  test_images = numpy.swapaxes(test_images[numpy.newaxis], 0,1)
+  test_labels = numpy.swapaxes(test_labels[numpy.newaxis], 0, 1)
+  _, loss, num_correct = cnn.forwardBatch(test_images, test_labels)
   #
   num_tests = len(test_images)
   print('Test Loss:', loss / num_tests)
@@ -128,13 +132,14 @@ def prepareData():
   train_data = []
   train_labels = []
   i = 0
-  thresh = 200
+  thresh = 1000
   for img in benign_images:
     i += 1
     if i > thresh:
       break
     img = Image.open(img).convert(mode = 'L')
-    img = img.resize((224, 224))
+    # img = img.resize((224, 224))
+    img = img.resize((28, 28))
     image = numpy.array(img)
     train_data.append(image)
     train_labels.append(0)
@@ -145,7 +150,8 @@ def prepareData():
     if i > thresh:
       break
     img = Image.open(img).convert(mode = 'L')
-    img = img.resize((224, 224))
+    # img = img.resize((224, 224))
+    img = img.resize((28, 28))
     image = numpy.array(img)
     train_data.append(image)
     train_labels.append(1)
@@ -154,7 +160,8 @@ def prepareData():
 
 def skinTest():
   train_images, train_labels = prepareData()
-  cnn = alexNet()
+  # cnn = alexNet()
+  cnn = leNet()
   for epoch in range(10):
     print('--- Epoch %d ---' % (epoch + 1))
 
@@ -164,17 +171,41 @@ def skinTest():
     train_labels = train_labels[permutation]
     loss = 0
     num_correct = 0
-    for i, (im, label) in enumerate(zip(train_images, train_labels)):
-      if i > 0 and i % 10 == 9:
+    batch_size = 1
+    # for i, (im, label) in enumerate(zip(train_images, train_labels)):
+    for i in range(len(train_labels) // batch_size):
+      if i > 0 and i % 100 == 0:
+        # if i > 0:
         print(
-          '[Step %d] Past 10 steps: Average Loss %.3f | Accuracy: %d%%' %
-          (i + 1, loss / 10, num_correct)
+          '[Step %d] Past %d steps: Average Loss %.3f | Accuracy: %d%%' %
+          (i * batch_size, i * batch_size, loss / 100.0, num_correct)
         )
         loss = 0
-        num_correct = 0
-      l, acc = cnn.train(im, label)
+        num_correct = 0.0
+      im = train_images[i * batch_size: (i + 1) * batch_size]
+      im = numpy.swapaxes(im[numpy.newaxis], 0, 1)
+      label = train_labels[i * batch_size: (i + 1) * batch_size]
+      label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
+      l, acc = cnn.train3(im, label)
       loss += l
       num_correct += acc
+
+    # Test the CNN
+  print('\n--- Testing the CNN ---')
+  loss = 0
+  num_correct = 0
+  # for im, label in zip(test_images, test_labels):
+  #   _, l, acc = cnn.forwardImage(im, label)
+  #   loss += l
+  #   num_correct += acc
+  #
+  # test_images = numpy.swapaxes(test_images[numpy.newaxis], 0, 1)
+  # test_labels = numpy.swapaxes(test_labels[numpy.newaxis], 0, 1)
+  # _, loss, num_correct = cnn.forwardBatch(test_images, test_labels)
+  # #
+  # num_tests = len(test_images)
+  # print('Test Loss:', loss / num_tests)
+  # print('Test Accuracy:', num_correct / num_tests)
 
 # skinTest()
 mnist_test()

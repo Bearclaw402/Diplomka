@@ -26,12 +26,11 @@ class CNN:
 
     def forwardBatch(self, batch, labels):
         output = ((batch / 255) - 0.5)
-        # out2 = output[0]
         for i in range(0, len(self.layers) - 1):
             output = self.layers[i].forward(output)
         total_loss = 0.0
         total_acc = 0.0
-        outs = []
+        gradients = []
         for i in range(len(batch)):
             out = self.layers[- 1].forward(output[i])
             loss = -np.log(out[labels[i]])
@@ -40,14 +39,10 @@ class CNN:
             total_loss += loss
             gradient = np.zeros(self.num_outputs)
             gradient[labels[i]] = -1 / out[labels[i]]
+            gradients.append(gradient)
+        return gradients, total_loss, total_acc
 
-            # Backprop
-            outs.append(self.layers[-1].backward(gradient))
-            self.layers[-1].updateWeights(0.005 * len(batch))
-            # outs.append(out)
-        return outs, total_loss, total_acc
-
-    def train(self, im, label, lr=.005):
+    def train(self, im, label, lr=.01):
         '''
         Completes a full training step on the given image and label.
         Returns the cross-entropy loss and accuracy.
@@ -80,7 +75,7 @@ class CNN:
             layer.updateWeights(lr * batch_size)
         return avg_loss, avg_acc
 
-    def train2(self, im, label, lr=.005):
+    def train2(self, im, label, lr=.01):
         batch_size = im.shape[0]
         gradients = []
         avg_loss = 0.0
@@ -106,12 +101,13 @@ class CNN:
 
         return avg_loss, avg_acc
 
-    def train3(self, im, label, lr=.005):
+    def train3(self, im, label, lr=.01):
         batch_size = im.shape[0]
         gradients, loss, acc = self.forwardBatch(im, label)
-        for i in range(len(self.layers)- 2, 0, -1):
+
+        for i in range(len(self.layers)- 1, 0, -1):
             layer = self.layers[i]
             gradients = layer.backward(gradients)
-            layer.updateWeights(lr * batch_size)
+            layer.updateWeights(lr)
 
         return loss, acc

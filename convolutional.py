@@ -3,6 +3,7 @@ from scipy import ndimage
 from scipy import signal
 import numpy
 import time
+from Adam import AdamOptimizer
 
 
 class Conv(interface.ILayer):
@@ -16,6 +17,7 @@ class Conv(interface.ILayer):
         self.filters = numpy.random.randn(num_filters, prev_layer_size, filter_size, filter_size) / (filter_size * filter_size)
         self.gradients = []
         self.inp = []
+        self.adam = AdamOptimizer(self.filters)
 
     def setFilters(self, filters):
         self.filters = filters
@@ -293,7 +295,8 @@ class Conv(interface.ILayer):
                                b:b + self.height, :, :], axis=(0, 1,2))
                 d_L_d_filters[:, :, a, b] = asd.swapaxes(0,1)
 
-        self.filters -= learn_rate * d_L_d_filters
+        # self.filters -= learn_rate * d_L_d_filters
+        self.filters = self.adam.backward_pass(d_L_d_filters)
 
     def forward1(self, prev_layer):
         if self.stride > 1:

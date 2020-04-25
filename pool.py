@@ -95,9 +95,9 @@ class Pool(interface.ILayer):
         for i in range(len(prev_layer)):
             if self.stride != self.filter_size:
                 if self.pool_type == 'max':
-                    result[i] = self.maxPooling(prev_layer)
+                    result[i] = self.maxPooling(prev_layer[i])
                 elif self.pool_type == 'avg':
-                    result[i] = self.avgPooling(prev_layer)
+                    result[i] = self.avgPooling(prev_layer[i])
             else:
                     result[i] = self.poolFW1(prev_layer[i])
         return result
@@ -129,9 +129,6 @@ class Pool(interface.ILayer):
         return result
 
     def forward(self, prev_layer):
-        # tmp1 = self.forward1(prev_layer[0])
-        # tmp2 = self.forward2(prev_layer)
-        # self.mask = []
         if (prev_layer.ndim > 3):
             return self.forward2(prev_layer)
         else:

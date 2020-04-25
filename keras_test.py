@@ -59,7 +59,7 @@ model.add(layers.Dense(10, activation='softmax'))
 ss = keras.optimizers.sgd()
 model.compile(loss=keras.losses.categorical_crossentropy, optimizer=ss, metrics=["accuracy"])
 
-hist = model.fit(x=x_train,y=y_train, epochs=10, batch_size=100, validation_data=(x_test, y_test), verbose=1)
+hist = model.fit(x=x_train,y=y_train, epochs=10, batch_size=1, validation_data=(x_test, y_test), verbose=1)
 
 ######## EVALUATE ########
 test_score = model.evaluate(x_test, y_test)
