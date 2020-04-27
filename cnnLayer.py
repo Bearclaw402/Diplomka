@@ -74,8 +74,8 @@ class CNNLayer(interface.ILayer):
         gradient = self.gradients
         d_t_d_w = numpy.array(self.inp)
         d_L_d_w = d_t_d_w.T @ gradient
+        sdsd = 1/(len(self.gradients)) * d_L_d_w.T
         for neuron in range(len(self.layer.neurons)):
-            sdsd = 1/(len(self.gradients)) * d_L_d_w.T
-            self.layer.neurons[neuron].weights -= learn_rate * sdsd[neuron].T
+            self.layer.neurons[neuron].weights -= learn_rate * sdsd[neuron]
         self.gradients = []
         self.inp = []

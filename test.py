@@ -37,16 +37,27 @@ def leNet():
 
 def alexNet():
   cnn = CNN(2)
-  conv1 = Conv(1, 96, 11, 4)
+  # conv1 = Conv(1, 96, 11, 4)
+  # pool1 = Pool(2, 3, 'max')
+  # conv2 = Conv(96, 256, 5)
+  # pool2 = Pool(2, 3, 'max')
+  # conv3 = Conv(256, 384, 3)
+  # conv4 = Conv(384, 384, 3)
+  # conv5 = Conv(384, 256, 3)
+  # pool3 = Pool(2, 3, 'max')
+  # fc1 = CNNLayer(256, 256, 'relu')
+  # fc2 = CNNLayer(256, 256, 'relu')
+  # sm = Softmax(2, 256)
+  conv1 = Conv(1, 6, 11, 4)
   pool1 = Pool(2, 3, 'max')
-  conv2 = Conv(96, 256, 5)
+  conv2 = Conv(6, 16, 5)
   pool2 = Pool(2, 3, 'max')
-  conv3 = Conv(256, 384, 3)
-  conv4 = Conv(384, 384, 3)
-  conv5 = Conv(384, 256, 3)
+  conv3 = Conv(16, 32, 3)
+  conv4 = Conv(32, 64, 3)
+  conv5 = Conv(64, 64, 3)
   pool3 = Pool(2, 3, 'max')
-  fc1 = CNNLayer(256, 256, 'relu')
-  fc2 = CNNLayer(256, 256, 'relu')
+  fc1 = CNNLayer(128, 64, 'relu')
+  fc2 = CNNLayer(256, 128, 'relu')
   sm = Softmax(2, 256)
   cnn.add(conv1)
   cnn.add(pool1)
@@ -82,10 +93,10 @@ def mnist_test():
     # Train!
     loss = 0
     num_correct = 0
-    batch_size = 1
+    batch_size = 20
     # for i, (im, label) in enumerate(zip(train_images, train_labels)):
     for i in range(len(train_labels) // batch_size):
-      if i > 0 and i % 100 == 0:
+      if i > 0 and i % 5 == 0:
       # if i > 0:
         print(
           '[Step %d] Past %d steps: Average Loss %.3f | Accuracy: %d%%' %
@@ -96,7 +107,7 @@ def mnist_test():
       im = train_images[i * batch_size: (i+1)*batch_size]
       im = numpy.swapaxes(im[numpy.newaxis], 0,1)
       label = train_labels[i * batch_size: (i+1)*batch_size]
-      label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
+      # label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
       l, acc = cnn.train3(im, label)
       loss += l
       num_correct += acc
@@ -111,7 +122,7 @@ def mnist_test():
   #   num_correct += acc
   #
   test_images = numpy.swapaxes(test_images[numpy.newaxis], 0,1)
-  test_labels = numpy.swapaxes(test_labels[numpy.newaxis], 0, 1)
+  # test_labels = numpy.swapaxes()
   _, loss, num_correct = cnn.forwardBatch(test_images, test_labels)
   #
   num_tests = len(test_images)
@@ -119,7 +130,7 @@ def mnist_test():
   print('Test Accuracy:', num_correct / num_tests)
 
 
-def prepareData():
+def prepareData(thresh, test):
   training_dir = r'C:\Users\ASUS\Documents\Diplomka\data'
   benign_dir = training_dir + '//benign'
   malignant_dir = training_dir + '\malignant'
@@ -131,50 +142,67 @@ def prepareData():
   # An empty list. We will insert the data into this list in (img_path, label) format
   train_data = []
   train_labels = []
+
+  test_data = []
+  test_labels = []
+
   i = 0
-  thresh = 1000
   for img in benign_images:
     i += 1
-    if i > thresh:
-      break
-    img = Image.open(img).convert(mode = 'L')
+    img = Image.open(img).convert(mode='L')
     # img = img.resize((224, 224))
     img = img.resize((28, 28))
     image = numpy.array(img)
-    train_data.append(image)
-    train_labels.append(0)
+    if i > thresh:
+      if test:
+        test_data.append(image)
+        test_labels.append(0)
+      else:
+        break
+    else:
+      train_data.append(image)
+      train_labels.append(0)
 
   i = 0
   for img in malignant_images:
     i += 1
-    if i > thresh:
-      break
-    img = Image.open(img).convert(mode = 'L')
+    img = Image.open(img).convert(mode='L')
     # img = img.resize((224, 224))
     img = img.resize((28, 28))
     image = numpy.array(img)
-    train_data.append(image)
-    train_labels.append(1)
+    if i > thresh:
+      if test:
+        test_data.append(image)
+        test_labels.append(1)
+      else:
+        break
+    else:
+      train_data.append(image)
+      train_labels.append(1)
 
-  return numpy.array(train_data), numpy.array(train_labels)
+  return numpy.array(train_data), numpy.array(train_labels), numpy.array(test_data), numpy.array(test_labels)
 
 def skinTest():
-  train_images, train_labels = prepareData()
-  # cnn = alexNet()
-  cnn = leNet()
-  for epoch in range(10):
+  train_images, train_labels, test_images, test_labels = prepareData(1000, True)
+  cnn = alexNet()
+  # cnn = leNet()
+  for epoch in range(5):
     print('--- Epoch %d ---' % (epoch + 1))
 
     # Shuffle the training data
     permutation = numpy.random.permutation(len(train_images))
     train_images = train_images[permutation]
     train_labels = train_labels[permutation]
+    permutation = numpy.random.permutation(len(test_images))
+    test_images = test_images[permutation]
+    test_labels = test_labels[permutation]
     loss = 0
     num_correct = 0
-    batch_size = 1
+    batch_size = 10
     # for i, (im, label) in enumerate(zip(train_images, train_labels)):
+    step_size = 100/batch_size
     for i in range(len(train_labels) // batch_size):
-      if i > 0 and i % 100 == 0:
+      if i > 0 and i % step_size == 0:
         # if i > 0:
         print(
           '[Step %d] Past %d steps: Average Loss %.3f | Accuracy: %d%%' %
@@ -185,7 +213,7 @@ def skinTest():
       im = train_images[i * batch_size: (i + 1) * batch_size]
       im = numpy.swapaxes(im[numpy.newaxis], 0, 1)
       label = train_labels[i * batch_size: (i + 1) * batch_size]
-      label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
+      # label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
       l, acc = cnn.train3(im, label)
       loss += l
       num_correct += acc
@@ -194,21 +222,20 @@ def skinTest():
   print('\n--- Testing the CNN ---')
   loss = 0
   num_correct = 0
-  # for im, label in zip(test_images, test_labels):
-  #   _, l, acc = cnn.forwardImage(im, label)
-  #   loss += l
-  #   num_correct += acc
-  #
-  # test_images = numpy.swapaxes(test_images[numpy.newaxis], 0, 1)
-  # test_labels = numpy.swapaxes(test_labels[numpy.newaxis], 0, 1)
-  # _, loss, num_correct = cnn.forwardBatch(test_images, test_labels)
-  # #
-  # num_tests = len(test_images)
-  # print('Test Loss:', loss / num_tests)
-  # print('Test Accuracy:', num_correct / num_tests)
+  for im, label in zip(test_images, test_labels):
+    _, l, acc = cnn.forwardImage(im, label)
+    loss += l
+    num_correct += acc
 
-# skinTest()
-mnist_test()
+  test_images = numpy.swapaxes(test_images[numpy.newaxis], 0, 1)
+  _, loss, num_correct = cnn.forwardBatch(test_images, test_labels)
+  #
+  num_tests = len(test_images)
+  print('Test Loss:', loss / num_tests)
+  print('Test Accuracy:', num_correct / num_tests)
+
+skinTest()
+# mnist_test()
 
 def imageCopy():
   src = 'C://Users\ASUS\Downloads\Data\ISIC-images\HAM10000//'

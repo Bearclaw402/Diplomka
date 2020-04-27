@@ -18,12 +18,12 @@ class Softmax(interface.ILayer):
     def forward(self, inputs):
         inputs = np.array(inputs)
         self.inp.append(inputs)
-        self.last_input_shape = inputs.shape
-        self.inputs = inputs.flatten()
-        self.last_input = self.inputs
+        self.input_shape = inputs.shape
+        inputs = inputs.flatten()
+        # self.last_input = self.inputs
 
-        totals = np.dot(self.inputs, self.weights) + self.biases
-        self.last_totals = totals
+        totals = np.dot(inputs, self.weights) + self.biases
+        # self.last_totals = totals
         self.totals.append(totals)
         # x = totals - np.max(totals)
         # super_threshold_indices = x < self.thresh
@@ -49,7 +49,8 @@ class Softmax(interface.ILayer):
         for i, gradient in enumerate(d_L_d_out):
             if gradient == 0:
                 continue
-            totals = self.totals.pop()
+            totals = self.totals.pop(0)
+            # totals = self.totals[0]
             t_exp = np.exp(totals - np.max(totals))
 
             # Sum of all e^totals
@@ -64,7 +65,7 @@ class Softmax(interface.ILayer):
             self.gradients.append(d_L_d_t)
 
             d_L_d_inputs = self.weights @ d_L_d_t
-            return d_L_d_inputs.reshape(self.last_input_shape)
+            return d_L_d_inputs.reshape(self.input_shape)
 
     def updateWeights(self, learn_rate):
         gradient = self.gradients
@@ -72,6 +73,7 @@ class Softmax(interface.ILayer):
         d_L_d_w = d_t_d_w.T @ gradient
         d_L_d_w = (1/len(self.gradients))*d_L_d_w
         # self.weights -= learn_rate * d_L_d_w
+        # self.adam.alpha = learn_rate
         self.weights = self.adam.backward_pass(d_L_d_w)
         gradient = np.sum(self.gradients, axis=0) / len(self.gradients)
         self.biases -= learn_rate * gradient

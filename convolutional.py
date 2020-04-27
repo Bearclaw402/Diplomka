@@ -296,6 +296,7 @@ class Conv(interface.ILayer):
                 d_L_d_filters[:, :, a, b] = asd.swapaxes(0,1)
 
         # self.filters -= learn_rate * d_L_d_filters
+        # self.adam.alpha = learn_rate
         self.filters = self.adam.backward_pass(d_L_d_filters)
 
     def forward1(self, prev_layer):
