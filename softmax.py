@@ -1,38 +1,124 @@
-import numpy as np
+import numpy
+from scipy.stats import gennorm
+
 import ILayer as interface
 from Adam import AdamOptimizer
 
 class Softmax(interface.ILayer):
 
-    def __init__(self, layer_size, input_len):
-        np.random.seed(1000)
-        self.weights = np.random.randn(input_len, layer_size) / input_len
-        self.biases = np.zeros(layer_size)
+    def __init__(self, layer_size, input_len, initializer='xavier_uniform'):
+        numpy.random.seed(1000)
+        self.prev_layer_size = input_len
+        self.layer_size = layer_size
+        # self.weights = numpy.random.randn(input_len, layer_size) / input_len
+        self.initializeWeights2(initializer)
+        self.biases = numpy.zeros(layer_size)
         self.epsilon = 1e-5
         self.gradients = []
         self.inp = []
         self.totals = []
-        # self.thresh = -500
         self.adam = AdamOptimizer(self.weights)
 
+    def initializeWeights(self, type='xavier_uniform'):
+        n_in = self.prev_layer_size
+        n_out = self.layer_size
+        shape = [self.prev_layer_size, self.layer_size]
+        if type == 'xavier_normal':
+            scale = numpy.sqrt(2. / (n_in + n_out))
+            self.weights = numpy.random.normal(loc=0.0, scale=scale, size=shape)
+        elif type == 'he_normal':
+            scale = numpy.sqrt(2. / n_in)
+            self.weights = numpy.random.normal(loc=0.0, scale=scale, size=shape)
+        elif type == 'xavier_uniform':
+            scale = numpy.sqrt(6. / (n_in + n_out))
+            self.weights = numpy.random.uniform(low=-scale, high=scale, size = shape)
+        elif type == 'he_uniform':
+            scale = numpy.sqrt(6. / n_in)
+            self.weights = numpy.random.uniform(low=-scale, high=scale, size = shape)
+        elif type == 'random_uniform':
+            scale = 0.05
+            self.weights = numpy.random.uniform(low=-scale, high=scale, size = shape)
+        elif type == 'random_normal':
+            scale = 0.05
+            self.weights = numpy.random.normal(loc=0.0, scale=scale, size=shape)
+        else:
+            scale = 1. / self.prev_layer_size
+            self.weights = numpy.random.normal(loc=0.0, scale=scale, size=shape)
+
+    def initializeWeights2(self, type='xavier_uniform'):
+        initializer = type.split('_')[0]
+        distribution = type.split('_')[1]
+        n_in = self.prev_layer_size
+        n_out = self.layer_size
+        shape = [self.prev_layer_size, self.layer_size]
+        mean = 0.0
+        dev = 0.0
+        low = 0.0
+        high = 0.0
+        df = 1.0
+        beta = 1.0
+        if initializer == 'xavier':
+            if distribution == 'normal' or distribution == 'gennorm':
+                dev = numpy.sqrt(2.0 / (n_in + n_out))
+            elif distribution == 'uniform':
+                low = -numpy.sqrt(6.0 / (n_in + n_out))
+                high = numpy.sqrt(6.0 / (n_in + n_out))
+            else:
+                dev = numpy.sqrt(1.0 / (n_in + n_out))
+        elif initializer == 'he':
+            if distribution == 'normal' or distribution == 'gennorm':
+                dev = numpy.sqrt(2.0 / n_in)
+            elif distribution == 'uniform':
+                low = -numpy.sqrt(6.0 / n_in)
+                high = numpy.sqrt(6.0 / n_in)
+            else:
+                dev = numpy.sqrt(1.0 / n_in)
+        elif initializer == 'random':
+            low = -0.05
+            high = 0.05
+        else:
+            dev = 1. / n_in
+
+        if distribution == 'normal':
+            self.weights = self.normal(shape,mean,dev)
+        elif distribution == 'uniform':
+            self.weights = self.uniform(shape,low,high)
+        elif distribution == 'student':
+            self.weights = dev*self.student(shape,df)
+        elif distribution == 'chisqr':
+            self.weights = dev*self.chisqr(shape,df)
+        elif distribution == 'gennorm':
+            self.weights = self.gennorm(shape,beta,mean,dev)
+        else:
+            self.weights = self.normal(shape)
+
+    def normal(self, shape, mean=0.0, dev=0.05):
+        return numpy.random.normal(loc=mean, scale=dev, size=shape)
+
+    def uniform(self, shape, low=-0.05, high=0.05):
+        return numpy.random.uniform(low=low, high=high, size=shape)
+
+    def student(self, shape, df=1.0):
+        return numpy.random.standard_t(df=df, size=shape)
+
+    def chisqr(self, shape, df=1.0):
+        return numpy.random.chisquare(df=df, size=shape)
+
+    def gennorm(self, shape, beta=1.0, mean=0.0, dev=0.05):
+        return gennorm.rvs(beta=beta, loc=mean, scale=dev, size=shape)
+
     def forward(self, inputs):
-        inputs = np.array(inputs)
+        inputs = numpy.array(inputs)
         self.inp.append(inputs)
         self.input_shape = inputs.shape
         inputs = inputs.flatten()
-        # self.last_input = self.inputs
 
-        totals = np.dot(inputs, self.weights) + self.biases
-        # self.last_totals = totals
+        totals = numpy.dot(inputs, self.weights) + self.biases
         self.totals.append(totals)
-        # x = totals - np.max(totals)
-        # super_threshold_indices = x < self.thresh
-        # x[super_threshold_indices] = self.thresh
-        exp = np.exp(totals - np.max(totals)) + self.epsilon
-        return exp / np.sum(exp, axis=0)
+        exp = numpy.exp(totals - numpy.max(totals)) + self.epsilon
+        return exp / numpy.sum(exp, axis=0)
 
     def backward(self, prev_layer):
-        # return self.backpropSM(prev_layer)
         result = []
         for i in range(len(prev_layer)):
             result.append(self.backpropSM(prev_layer[i]))
@@ -50,18 +136,17 @@ class Softmax(interface.ILayer):
             if gradient == 0:
                 continue
             totals = self.totals.pop(0)
-            # totals = self.totals[0]
-            t_exp = np.exp(totals - np.max(totals))
+            t_exp = numpy.exp(totals - numpy.max(totals))
 
             # Sum of all e^totals
-            S = np.sum(t_exp)
+            S = numpy.sum(t_exp)
 
             # Gradients of out[i] against totals
             d_out_d_t = -t_exp[i] * t_exp / (S ** 2)
             d_out_d_t[i] = t_exp[i] * (S - t_exp[i]) / (S ** 2)
 
             # Gradients of loss against totals
-            d_L_d_t = np.array(gradient * d_out_d_t)
+            d_L_d_t = numpy.array(gradient * d_out_d_t)
             self.gradients.append(d_L_d_t)
 
             d_L_d_inputs = self.weights @ d_L_d_t
@@ -69,13 +154,13 @@ class Softmax(interface.ILayer):
 
     def updateWeights(self, learn_rate):
         gradient = self.gradients
-        d_t_d_w = np.array(self.inp)
+        d_t_d_w = numpy.array(self.inp)
         d_L_d_w = d_t_d_w.T @ gradient
         d_L_d_w = (1/len(self.gradients))*d_L_d_w
         # self.weights -= learn_rate * d_L_d_w
         # self.adam.alpha = learn_rate
         self.weights = self.adam.backward_pass(d_L_d_w)
-        gradient = np.sum(self.gradients, axis=0) / len(self.gradients)
+        gradient = numpy.sum(self.gradients, axis=0) / len(self.gradients)
         self.biases -= learn_rate * gradient
         self.gradients = []
         self.inp = []
