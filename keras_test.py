@@ -54,11 +54,11 @@ def prepareData(thresh, test):
     k = 0
     for img in benign_images:
         i += 1
-        # img = Image.open(img).convert(mode = 'L')
-        img = Image.open(img).convert(mode='RGB')
+        img = Image.open(img).convert(mode = 'L')
+        # img = Image.open(img).convert(mode='RGB')
         # img = img.resize((224, 224))
-        img = img.resize((28, 28))
-        # img = img.resize((64, 64))
+        # img = img.resize((28, 28))
+        img = img.resize((64, 64))
         image = numpy.array(img)
         if i > thresh:
             if test:
@@ -84,11 +84,11 @@ def prepareData(thresh, test):
     k = 0
     for img in malignant_images:
         i += 1
-        # img = Image.open(img).convert(mode = 'L')
-        img = Image.open(img).convert(mode='RGB')
+        img = Image.open(img).convert(mode = 'L')
+        # img = Image.open(img).convert(mode='RGB')
         # img = img.resize((224, 224))
-        img = img.resize((28, 28))
-        # img = img.resize((64, 64))
+        # img = img.resize((28, 28))
+        img = img.resize((64, 64))
         image = numpy.array(img)
         if i > thresh:
             if test:
@@ -165,12 +165,12 @@ y_valid = np_utils.to_categorical(y_valid, 2)
 # x_train = x_train.reshape(x_train.shape[0], 224,224,3)
 # x_test = x_test.reshape(x_test.shape[0], 224,224,3)
 # x_valid = x_valid.reshape(x_valid.shape[0], 224,224,3)
-x_train = x_train.reshape(x_train.shape[0], 28,28,3)
-x_test = x_test.reshape(x_test.shape[0], 28,28,3)
-x_valid = x_valid.reshape(x_valid.shape[0], 28,28,3)
-# x_train = x_train.reshape(x_train.shape[0], 64,64,3)
-# x_test = x_test.reshape(x_test.shape[0], 64,64,3)
-# x_valid = x_valid.reshape(x_valid.shape[0], 64,64,3)
+# x_train = x_train.reshape(x_train.shape[0], 28,28,3)
+# x_test = x_test.reshape(x_test.shape[0], 28,28,3)
+# x_valid = x_valid.reshape(x_valid.shape[0], 28,28,3)
+x_train = x_train.reshape(x_train.shape[0], 64,64,1)
+x_test = x_test.reshape(x_test.shape[0], 64,64,1)
+x_valid = x_valid.reshape(x_valid.shape[0], 64,64,1)
 
 def leNet(init, act):
     #Instantiate an empty model
@@ -305,18 +305,18 @@ def vgg16_2():
     model.add(layers.Dense(units=2, activation="softmax"))
     return model
 
-def myNet():
+def myNet(n_fils1, n_fils2):
     # Instantiate an empty model
     model = Sequential()
-    model.add(layers.Conv2D(32, kernel_initializer='glorot_uniform', kernel_size=(3, 3), strides=(1, 1), input_shape=(64, 64, 3), padding="same"))
-    model.add(layers.PReLU())
+    model.add(layers.Conv2D(n_fils1, kernel_initializer='glorot_uniform', kernel_size=(5, 5), strides=(2, 2), input_shape=(64, 64, 1), padding="same", activation='relu'))
+    # model.add(layers.PReLU())
     # model.add(layers.Dropout(rate=0.2))
-    model.add(layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='valid'))
+    model.add(layers.MaxPooling2D(pool_size=(3, 3), strides=(3, 3), padding='valid'))
     # model.add(layers.Conv2D(16, kernel_initializer='glorot_uniform', kernel_size=(5, 5), strides=(1, 1), padding='valid', activation='relu'))
     # Flatten the CNN output so that we can connect it with fully connected layers
     model.add(layers.Flatten())
-    model.add(layers.Dense(512, kernel_initializer='glorot_uniform'))
-    model.add(layers.PReLU())
+    model.add(layers.Dense(n_fils2, kernel_initializer='glorot_uniform', activation='relu'))
+    # model.add(layers.PReLU())
     # model.add(layers.Dropout(rate=0.2))
     # Output Layer with softmax activation
     model.add(layers.Dense(2, kernel_initializer='glorot_uniform', activation='softmax'))
@@ -338,27 +338,30 @@ def myNet():
 # mm = keras.metrics.TruePositives()
 # model.compile(loss='squared_hinge', optimizer=ss, metrics=["accuracy"])
 # model.compile(loss=keras.losses.binary_crossentropy, optimizer=ss, metrics=[keras.metrics.FalseNegatives()])
-total_loss = 0.0
-total_acc = 0.0
-reps = 10
-for i in range(reps):
-    ss = tf.keras.optimizers.Adam()
-    # model = alexNet2('glorot_normal', None)
-    model = leNet('lecun_normal', None)
-    # model=myNet()
-    model.compile(loss=tf.keras.losses.categorical_crossentropy, optimizer=ss, metrics=["accuracy"])
-    hist = model.fit(x=x_train,y=y_train, epochs=30, batch_size=128, validation_data=(x_valid, y_valid), verbose=0)
+for fils1 in range(1):
+    for fils2 in range(1):
+        total_loss = 0.0
+        total_acc = 0.0
+        reps = 10
+        # print("combination fils1 = " + str(fils1+2)  + " fils2 = " + str(fils2+3))
+        for i in range(reps):
+            ss = tf.keras.optimizers.Adam()
+            # model = alexNet2('glorot_normal', None)
+            # model = leNet('lecun_normal', None)
+            model=myNet(16, 64)
+            model.compile(loss=tf.keras.losses.categorical_crossentropy, optimizer=ss, metrics=["accuracy"])
+            hist = model.fit(x=x_train,y=y_train, epochs=30, batch_size=128, validation_data=(x_valid, y_valid), verbose=0)
 
-    ######## EVALUATE ########
-    test_score = model.evaluate(x_test, y_test)
-    print("Replication " + str(i+1))
-    print("Test loss {:.4f}, accuracy {:.2f}%".format(test_score[0], test_score[1] * 100))
-    total_loss += test_score[0]
-    total_acc += test_score[1] * 100
-    model.reset_metrics()
-    model.reset_states()
+            ######## EVALUATE ########
+            test_score = model.evaluate(x_test, y_test)
+            print("Replication " + str(i+1))
+            print("Test loss {:.4f}, accuracy {:.2f}%".format(test_score[0], test_score[1] * 100))
+            total_loss += test_score[0]
+            total_acc += test_score[1] * 100
+            model.reset_metrics()
+            model.reset_states()
 
-print("Average loss {:.4f}, accuracy {:.2f}%".format((total_loss/reps), (total_acc/reps)))
+        print("Average loss {:.4f}, accuracy {:.2f}%".format((total_loss/reps), (total_acc/reps)))
 
 ######## Visualize ########
 # f, ax = plt.subplots()

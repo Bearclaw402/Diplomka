@@ -11,16 +11,35 @@ class Pool(interface.ILayer):
 
     def maxPooling(self, input):
         self.last_input = input
-        output = numpy.zeros([self.depth, self.height, self.width])
+        output = numpy.zeros([input.shape[0],self.depth, self.height, self.width])
         self.output_indexes = numpy.zeros(output.shape)
-        for i in range(self.depth):
-            for row in range(self.height):
-                for column in range(self.width):
-                    partial_matrix = input[i][row * self.stride: row * self.stride + self.filter_size,
-                                    column * self.stride:column * self.stride + self.filter_size]
-                    output[i][row][column] = numpy.max(partial_matrix)
-                    self.output_indexes[i][row][column] = numpy.argmax(partial_matrix)
+        weights = numpy.zeros((input.shape[0],input.shape[1],input.shape[2]-1,input.shape[3]-1))
+        for row in range(self.height):
+            for column in range(self.width):
+                partial_matrix = input[:,:,row * self.stride: row * self.stride + self.filter_size,
+                                     column * self.stride:column * self.stride + self.filter_size]
+                max1 = numpy.max(partial_matrix, axis=(2,3))
+                mmaxx = max1[:,:,numpy.newaxis,numpy.newaxis]
+                mmaxx = numpy.repeat(numpy.repeat(mmaxx,self.filter_size,axis=2),self.filter_size,axis=3)
+                indexes1 = partial_matrix >= mmaxx
+                output[:,:,row,column] = max1
+                weights[:,:,row * self.stride: row * self.stride + self.filter_size,
+                                     column * self.stride:column * self.stride + self.filter_size] = indexes1
+        self.mask = weights
         return output
+
+    # def maxPooling(self, input):
+    #     self.last_input = input
+    #     output = numpy.zeros([self.depth, self.height, self.width])
+    #     self.output_indexes = numpy.zeros(output.shape)
+    #     for i in range(self.depth):
+    #         for row in range(self.height):
+    #             for column in range(self.width):
+    #                 partial_matrix = input[i][row * self.stride: row * self.stride + self.filter_size,
+    #                                 column * self.stride:column * self.stride + self.filter_size]
+    #                 output[i][row][column] = numpy.max(partial_matrix)
+    #                 self.output_indexes[i][row][column] = numpy.argmax(partial_matrix)
+    #     return output
 
     def avgPooling(self, input):
         self.last_input = input
@@ -48,7 +67,7 @@ class Pool(interface.ILayer):
         self.last_input = input
         output = numpy.zeros([input.shape[0],self.depth, self.height, self.width])
         self.output_indexes = numpy.zeros(output.shape)
-        weights = numpy.zeros(input.shape)
+        weights = numpy.zeros((input.shape[0],input.shape[1],input.shape[2]-1,input.shape[3]-1))
         for row in range(self.height):
             for column in range(self.width):
                 partial_matrix = input[:,:,row * self.stride: row * self.stride + self.filter_size,
@@ -56,7 +75,7 @@ class Pool(interface.ILayer):
                 output[:,:,row,column] = numpy.mean(partial_matrix)
                 partial_matrix+=1
                 mmaxx = numpy.max(partial_matrix, axis=(2,3))[:,:,numpy.newaxis, numpy.newaxis]
-                weights[:,:,row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size] = partial_matrix / numpy.repeat(numpy.repeat(mmaxx,2,axis=2),2,axis=3)
+                weights[:,:,row * self.stride: row * self.stride + self.filter_size, column * self.stride:column * self.stride + self.filter_size] = partial_matrix / numpy.repeat(numpy.repeat(mmaxx,self.filter_size,axis=2),self.filter_size,axis=3)
         self.mask = weights
         return output
 
@@ -64,19 +83,19 @@ class Pool(interface.ILayer):
         self.last_input = input
         output = numpy.zeros([input.shape[0],self.depth, self.height, self.width])
         self.output_indexes = numpy.zeros(output.shape)
-        weights = numpy.zeros(input.shape)
+        weights = numpy.zeros((input.shape[0],input.shape[1],input.shape[2]-1,input.shape[3]-1))
         for row in range(self.height):
             for column in range(self.width):
                 partial_matrix = input[:,:,row * self.stride: row * self.stride + self.filter_size,
                                      column * self.stride:column * self.stride + self.filter_size]
                 max1 = numpy.max(partial_matrix, axis=(2,3))
                 mmaxx = max1[:,:,numpy.newaxis,numpy.newaxis]
-                mmaxx = numpy.repeat(numpy.repeat(mmaxx,2,axis=2),2,axis=3)
+                mmaxx = numpy.repeat(numpy.repeat(mmaxx,self.filter_size,axis=2),self.filter_size,axis=3)
                 indexes1 = partial_matrix >= mmaxx
                 partial_matrix[indexes1] = -2.0
                 max2 = numpy.max(partial_matrix, axis=(2,3))
                 mmaxx = max2[:,:,numpy.newaxis,numpy.newaxis]
-                mmaxx = numpy.repeat(numpy.repeat(mmaxx,2,axis=2),2,axis=3)
+                mmaxx = numpy.repeat(numpy.repeat(mmaxx,self.filter_size,axis=2),self.filter_size,axis=3)
                 indexes2 = partial_matrix >= mmaxx
                 output[:,:,row,column] = (max1 + max2) / 2.0
                 weights[:,:,row * self.stride: row * self.stride + self.filter_size,
@@ -129,7 +148,7 @@ class Pool(interface.ILayer):
         return out
 
     def poolBW1(self, d_L_d_out):
-        if self.pool_type == 'wavg' or self.pool_type == 'max2':
+        if self.pool_type == 'wavg' or self.pool_type == 'max2' or self.pool_type == 'max':
             return self.mask * (numpy.repeat(numpy.repeat(d_L_d_out, self.filter_size, axis=1), self.filter_size, axis=2))
         else:
             return self.mask.pop() * (numpy.repeat(numpy.repeat(d_L_d_out, self.filter_size, axis=1), self.filter_size, axis=2))
@@ -157,6 +176,8 @@ class Pool(interface.ILayer):
             return self.weightAvgPooling(prev_layer)
         elif self.pool_type == 'max2':
             return self.maxPooling2(prev_layer)
+        elif self.pool_type == 'max':
+            return self.maxPooling(prev_layer)
         for i in range(len(prev_layer)):
             if self.stride != self.filter_size:
                 if self.pool_type == 'max':
@@ -185,7 +206,7 @@ class Pool(interface.ILayer):
         result = []
         mmm = self.mask
         for i in range(d_L_d_out.shape[0]):
-            if self.pool_type == 'wavg' or self.pool_type == 'max2':
+            if self.pool_type == 'wavg' or self.pool_type == 'max2' or self.pool_type == 'max':
                 self.mask = mmm[i]
             tmp = numpy.zeros(self.last_input.shape)
             if self.stride != self.filter_size:

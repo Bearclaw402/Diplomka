@@ -58,7 +58,7 @@ class Softmax(interface.ILayer):
         df = 1.0
         beta = 1.0
         if initializer == 'xavier':
-            if distribution == 'normal' or distribution == 'gennorm':
+            if 'norm' in distribution:
                 dev = numpy.sqrt(2.0 / (n_in + n_out))
             elif distribution == 'uniform':
                 low = -numpy.sqrt(6.0 / (n_in + n_out))
@@ -66,7 +66,7 @@ class Softmax(interface.ILayer):
             else:
                 dev = numpy.sqrt(1.0 / (n_in + n_out))
         elif initializer == 'he':
-            if distribution == 'normal' or distribution == 'gennorm':
+            if 'norm' in distribution:
                 dev = numpy.sqrt(2.0 / n_in)
             elif distribution == 'uniform':
                 low = -numpy.sqrt(6.0 / n_in)
@@ -89,6 +89,8 @@ class Softmax(interface.ILayer):
             self.weights = dev*self.chisqr(shape,df)
         elif distribution == 'gennorm':
             self.weights = self.gennorm(shape,beta,mean,dev)
+        elif distribution == 'lognorm':
+            self.weights = self.lognorm(shape,mean,dev)
         else:
             self.weights = self.normal(shape)
 
@@ -106,6 +108,9 @@ class Softmax(interface.ILayer):
 
     def gennorm(self, shape, beta=1.0, mean=0.0, dev=0.05):
         return gennorm.rvs(beta=beta, loc=mean, scale=dev, size=shape)
+
+    def lognorm(self, shape, mean=0.0, dev=0.05):
+        return numpy.random.lognormal(mean=mean, sigma=dev, size=shape)
 
     def forward(self, inputs):
         inputs = numpy.array(inputs)

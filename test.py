@@ -12,7 +12,7 @@ from shutil import copyfile
 import csv
 
 def leNet():
-  cnn = CNN(2)
+  cnn = CNN(2, loss='categorical_crossentropy')
   # conv1 = Conv(1,8,3)
   # pool1 = Pool(2,2,'max')
   # sm = Softmax(10, 13 * 13 * 8)
@@ -71,6 +71,18 @@ def alexNet():
   # cnn.add(pool3)
   cnn.add(fc1)
   cnn.add(fc2)
+  cnn.add(sm)
+  return cnn
+
+def BranoNet():
+  cnn = CNN(2, loss='categorical_crossentropy')
+  conv1 = Conv(1,16,3,stride=2, initializer='he_uniform',activation='comb')
+  pool1 = Pool(3,3,'max2')
+  fc1 = Dense(64, 16*10*10, initializer='he_uniform',activation='comb')
+  sm = Softmax(2, 64,initializer='he_uniform')
+  cnn.add(conv1)
+  cnn.add(pool1)
+  cnn.add(fc1)
   cnn.add(sm)
   return cnn
 
@@ -169,7 +181,8 @@ def prepareData(thresh, test):
         img = Image.open(img).convert(mode = 'L')
         # img = Image.open(img).convert(mode = 'RGB')
         # img = img.resize((224, 224))
-        img = img.resize((28, 28))
+        # img = img.resize((28, 28))
+        img = img.resize((64, 64))
         image = numpy.array(img)
         if i > thresh:
             if test:
@@ -192,7 +205,8 @@ def prepareData(thresh, test):
         img = Image.open(img).convert(mode = 'L')
         # img = Image.open(img).convert(mode = 'RGB')
         # img = img.resize((224, 224))
-        img = img.resize((28, 28))
+        # img = img.resize((28, 28))
+        img = img.resize((64, 64))
         image = numpy.array(img)
         if i > thresh:
             if test:
@@ -233,6 +247,7 @@ def skinTest():
     k = 5
     total_loss = 0.0
     total_acc = 0.0
+    total_stats = numpy.zeros((2,2))
     for i in range(k):
         print()
         print('K - %d' % (i+1))
@@ -242,7 +257,8 @@ def skinTest():
         test_images = all_images[part_size*i:part_size*(i+1)]
         test_labels = all_labels[part_size*i:part_size*(i+1)]
         # cnn = alexNet()
-        cnn = leNet()
+        # cnn = leNet()
+        cnn = BranoNet()
         for epoch in range(30):
             print('--- Epoch %d ---' % (epoch + 1))
             # Shuffle the training data
@@ -255,6 +271,7 @@ def skinTest():
             loss = 0
             num_correct = 0
             samples = 0
+            stats = numpy.zeros((2,2))
             batch_size = 128
             steps = int(numpy.ceil((len(train_labels) / batch_size)))
             for step in range(steps):
@@ -270,13 +287,16 @@ def skinTest():
                 # im = numpy.swapaxes(im, 3, 1)
                 # im = numpy.swapaxes(im, 2, 3)
                 # label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
-                l, acc = cnn.train3(im, label)
+                l, accs = cnn.train3(im, label)
+                stats+=accs
+                acc = (accs[0,0]+accs[1,1]) / numpy.sum(accs)
                 loss += l
                 num_correct += acc
                 print('[Step %d] Loss %.3f | Accuracy: %.2f%%' %
                     (samples, l, acc * 100.0))
             print('Past %d steps: Average Loss %.3f | Accuracy: %.2f%%' %
                 (samples, loss / steps, (num_correct / steps)* 100.0))
+            print('False Negative %d' % (stats[1, 0]))
 
         # Test the CNN
         print('\n--- Testing the CNN ---')
@@ -284,12 +304,28 @@ def skinTest():
         # test_images = numpy.swapaxes(test_images, 3, 1)
         # test_images = numpy.swapaxes(test_images, 2, 3)
         _, loss, num_correct = cnn.forwardBatch(test_images, test_labels)
+        total_stats+=num_correct
+        acc = (num_correct[0,0]+num_correct[1,1]) / numpy.sum(num_correct)
         # num_tests = len(test_images)
         print('Test Loss:', loss)
-        print('Test Accuracy:', num_correct)
+        # print('Test Accuracy:', num_correct)
+        print('Test Accuracy:', acc)
         total_loss += loss
-        total_acc += num_correct
+        # total_acc += num_correct
+        total_acc += acc
+        print("TN  |  FP")
+        print(num_correct[0])
+        print("FN  |  TP")
+        print(num_correct[1])
+        print("Sensitivity {:.2f}".format(num_correct[1,1]/(num_correct[1,1]+num_correct[1,0])))
+        print("Specificity {:.2f}".format(num_correct[0,0]/(num_correct[0,0]+num_correct[0,1])))
     print("Average loss {:.4f}, accuracy {:.2f}%".format((total_loss / k), (total_acc*100.0 / k)))
+    print("TN  |  FP")
+    print(total_stats[0] / k)
+    print("FN  |  TP")
+    print(total_stats[1] / k)
+    print("Sensitivity {:.2f}%".format((total_stats[1,1]/(total_stats[1,1]+total_stats[1,0])) * 100.0))
+    print("Specificity {:.2f}%".format((total_stats[0,0]/(total_stats[0,0]+total_stats[0,1])) * 100.0))
 
 skinTest()
 # mnist_test()
