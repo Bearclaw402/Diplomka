@@ -1,5 +1,6 @@
 import numpy
 
+
 class AdamOptimizer:
     def __init__(self, weights, alpha=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8):
         self.alpha = alpha
@@ -19,3 +20,13 @@ class AdamOptimizer:
         v_hat = self.v / (1 - self.beta2 ** self.t)
         self.theta = self.theta - self.alpha * (m_hat / (numpy.sqrt(v_hat) - self.epsilon))
         return self.theta
+
+
+class SGD:
+    def __init__(self, weights, learn_rate=0.001):
+        self.learn_rate = learn_rate
+        self.weights = weights
+
+    def backward_pass(self, gradient):
+        self.weights -= gradient * self.learn_rate
+        return self.weights

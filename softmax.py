@@ -2,7 +2,7 @@ import numpy
 from scipy.stats import gennorm
 
 import ILayer as interface
-from Adam import AdamOptimizer
+from Optimizer import AdamOptimizer
 
 class Softmax(interface.ILayer):
 
@@ -10,7 +10,6 @@ class Softmax(interface.ILayer):
         numpy.random.seed(1000)
         self.prev_layer_size = input_len
         self.layer_size = layer_size
-        # self.weights = numpy.random.randn(input_len, layer_size) / input_len
         self.initializeWeights2(initializer)
         self.biases = numpy.zeros(layer_size)
         self.epsilon = 1e-5
@@ -162,8 +161,6 @@ class Softmax(interface.ILayer):
         d_t_d_w = numpy.array(self.inp)
         d_L_d_w = d_t_d_w.T @ gradient
         d_L_d_w = (1/len(self.gradients))*d_L_d_w
-        # self.weights -= learn_rate * d_L_d_w
-        # self.adam.alpha = learn_rate
         self.weights = self.adam.backward_pass(d_L_d_w)
         gradient = numpy.sum(self.gradients, axis=0) / len(self.gradients)
         self.biases -= learn_rate * gradient

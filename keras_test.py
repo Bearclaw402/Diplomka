@@ -34,10 +34,12 @@ def prepareData(thresh, test):
     training_dir = r'C:\Users\ASUS\Documents\Diplomka\data'
     benign_dir = training_dir + '//benign'
     malignant_dir = training_dir + '\malignant'
+    others_dir = training_dir + '//tmp'
 
     # Get the list of all the images
     benign_images = glob.glob(benign_dir + '\*.jpg')
     malignant_images = glob.glob(malignant_dir + '\*.jpg')
+    others = glob.glob(others_dir + '\*.jpg')
 
     # An empty list. We will insert the data into this list in (img_path, label) format
     train_data = []
@@ -54,72 +56,71 @@ def prepareData(thresh, test):
     k = 0
     for img in benign_images:
         i += 1
-        img = Image.open(img).convert(mode = 'L')
-        # img = Image.open(img).convert(mode='RGB')
-        # img = img.resize((224, 224))
+        # img = Image.open(img).convert(mode = 'L')
+        img = Image.open(img).convert(mode='RGB')
+        img = img.resize((224, 224))
         # img = img.resize((28, 28))
-        img = img.resize((64, 64))
+        # img = img.resize((64, 64))
         image = numpy.array(img)
-        if i > thresh:
-            if test:
-                j+=1
-                if j > 100:
-                    k+=1
-                    if k > 100:
-                        break
-                    else:
-                        valid_data.append(image)
-                        valid_labels.append(0)
-                else:
-                    test_data.append(image)
-                    test_labels.append(0)
-            else:
-                break
-        else:
-            train_data.append(image)
-            train_labels.append(0)
+        # if i > thresh:
+        #     if test:
+        #         j+=1
+        #         if j > 100:
+        #             k+=1
+        #             if k > 100:
+        #                 break
+        #             else:
+        #                 valid_data.append(image)
+        #                 valid_labels.append(0)
+        #         else:
+        #             test_data.append(image)
+        #             test_labels.append(0)
+        #     else:
+        #         break
+        # else:
+        train_data.append(image)
+        train_labels.append(0)
 
     i = 0
     j = 0
     k = 0
     for img in malignant_images:
         i += 1
-        img = Image.open(img).convert(mode = 'L')
-        # img = Image.open(img).convert(mode='RGB')
-        # img = img.resize((224, 224))
+        # img = Image.open(img).convert(mode = 'L')
+        img = Image.open(img).convert(mode='RGB')
+        img = img.resize((224, 224))
         # img = img.resize((28, 28))
-        img = img.resize((64, 64))
+        # img = img.resize((64, 64))
         image = numpy.array(img)
-        if i > thresh:
-            if test:
-                j+=1
-                if j > 100:
-                    k+=1
-                    if k > 100:
-                        break
-                    else:
-                        valid_data.append(image)
-                        valid_labels.append(1)
-                else:
-                    test_data.append(image)
-                    test_labels.append(1)
-            else:
-                break
-        else:
-            train_data.append(image)
-            train_labels.append(1)
+        # if i > thresh:
+        #     if test:
+        #         j+=1
+        #         if j > 100:
+        #             k+=1
+        #             if k > 100:
+        #                 break
+        #             else:
+        #                 valid_data.append(image)
+        #                 valid_labels.append(1)
+        #         else:
+        #             test_data.append(image)
+        #             test_labels.append(1)
+        #     else:
+        #         break
+        # else:
+        train_data.append(image)
+        train_labels.append(1)
 
-    # i = 0
-    # for img in malignant_images:
-    #     i += 1
-    #     if i > 200:
-    #         break
-    #     img = Image.open(img).convert(mode = 'L')
-    #     # img = img.resize((224, 224))
-    #     img = img.resize((28, 28))
-    #     image = numpy.array(img)
-    #     test_data.append(image)
-    #     test_labels.append(1)
+    for img in others:
+        i += 1
+        # img = Image.open(img).convert(mode='L')
+        img = Image.open(img).convert(mode = 'RGB')
+        img = img.resize((224, 224))
+        # img = img.resize((28, 28))
+        # img = img.resize((64, 64))
+        image = numpy.array(img)
+        test_data.append(image)
+        test_labels.append(0)
 
     train_data = numpy.array(train_data)
     train_labels = numpy.array(train_labels)
@@ -130,16 +131,29 @@ def prepareData(thresh, test):
     return train_data, train_labels, test_data, test_labels, valid_data, valid_labels
 
 
-x_train, y_train, x_test, y_test, x_valid, y_valid = prepareData(500, True)
-permutation = numpy.random.permutation(len(x_train))
-x_train = x_train[permutation]
-y_train = y_train[permutation]
-permutation = numpy.random.permutation(len(x_test))
-x_test = x_test[permutation]
-y_test = y_test[permutation]
-permutation = numpy.random.permutation(len(x_valid))
-x_valid = x_valid[permutation]
-y_valid = y_valid[permutation]
+# x_train, y_train, x_test, y_test, x_valid, y_valid = prepareData(500, True)
+x_train, y_train, x_test, y_test, x_valid, y_valid = prepareData(525, True)
+all_images = numpy.concatenate((x_train, x_test))
+all_labels = numpy.concatenate((y_train, y_test))
+permutation = numpy.random.permutation(len(all_images))
+all_images = all_images[permutation]
+all_labels = all_labels[permutation]
+part_size = len(all_images) // 5
+x_valid = all_images[:100]
+y_valid = all_labels[:100]
+x_test = all_images[100:part_size]
+y_test = all_labels[100:part_size]
+x_train = all_images[(part_size + 100):]
+y_train = all_labels[(part_size + 100):]
+# permutation = numpy.random.permutation(len(x_train))
+# x_train = x_train[permutation]
+# y_train = y_train[permutation]
+# permutation = numpy.random.permutation(len(x_test))
+# x_test = x_test[permutation]
+# y_test = y_test[permutation]
+# permutation = numpy.random.permutation(len(x_valid))
+# x_valid = x_valid[permutation]
+# y_valid = y_valid[permutation]
 
 # x_test = mnist.test_images()[:2000]
 # y_test = mnist.test_labels()[:2000]
@@ -162,15 +176,15 @@ y_test = np_utils.to_categorical(y_test, 2)
 y_valid = np_utils.to_categorical(y_valid, 2)
 #
 # # Reshape the dataset into 4D array
-# x_train = x_train.reshape(x_train.shape[0], 224,224,3)
-# x_test = x_test.reshape(x_test.shape[0], 224,224,3)
-# x_valid = x_valid.reshape(x_valid.shape[0], 224,224,3)
+x_train = x_train.reshape(x_train.shape[0], 224,224,3)
+x_test = x_test.reshape(x_test.shape[0], 224,224,3)
+x_valid = x_valid.reshape(x_valid.shape[0], 224,224,3)
 # x_train = x_train.reshape(x_train.shape[0], 28,28,3)
 # x_test = x_test.reshape(x_test.shape[0], 28,28,3)
 # x_valid = x_valid.reshape(x_valid.shape[0], 28,28,3)
-x_train = x_train.reshape(x_train.shape[0], 64,64,1)
-x_test = x_test.reshape(x_test.shape[0], 64,64,1)
-x_valid = x_valid.reshape(x_valid.shape[0], 64,64,1)
+# x_train = x_train.reshape(x_train.shape[0], 64,64,1)
+# x_test = x_test.reshape(x_test.shape[0], 64,64,1)
+# x_valid = x_valid.reshape(x_valid.shape[0], 64,64,1)
 
 def leNet(init, act):
     #Instantiate an empty model
@@ -212,23 +226,23 @@ def alexNet2(init, act):
     # Instantiate an empty model
     model = Sequential()
     model.add(layers.Conv2D(6, kernel_initializer=init, kernel_size=(11, 11), strides=(4, 4), input_shape=(224, 224, 3), padding="same", activation=act))
-    model.add(layers.PReLU())
+    # model.add(layers.PReLU())
     model.add(layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='valid'))
     model.add(layers.Conv2D(16, kernel_initializer=init, kernel_size=(5, 5), strides=(1, 1), padding='valid', activation=act))
-    model.add(layers.PReLU())
+    # model.add(layers.PReLU())
     model.add(layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='valid'))
     model.add(layers.Conv2D(32, kernel_initializer=init, kernel_size=(3, 3), strides=(1, 1), padding='valid', activation=act))
-    model.add(layers.PReLU())
+    # model.add(layers.PReLU())
     model.add(layers.Conv2D(32, kernel_initializer=init, kernel_size=(3, 3), strides=(1, 1), padding='valid', activation=act))
-    model.add(layers.PReLU())
+    # model.add(layers.PReLU())
     model.add(layers.Conv2D(16, kernel_initializer=init,  kernel_size=(3, 3), strides=(1, 1), padding='valid', activation=act))
-    model.add(layers.PReLU())
+    # model.add(layers.PReLU())
     # Flatten the CNN output so that we can connect it with fully connected layers
     model.add(layers.Flatten())
     model.add(layers.Dense(128, kernel_initializer=init, activation=act))
-    model.add(layers.PReLU())
+    # model.add(layers.PReLU())
     model.add(layers.Dense(256, kernel_initializer=init, activation=act))
-    model.add(layers.PReLU())
+    # model.add(layers.PReLU())
     # Output Layer with softmax activation
     model.add(layers.Dense(2, kernel_initializer=init, activation='softmax'))
     return model
@@ -342,15 +356,15 @@ for fils1 in range(1):
     for fils2 in range(1):
         total_loss = 0.0
         total_acc = 0.0
-        reps = 10
+        reps = 1
         # print("combination fils1 = " + str(fils1+2)  + " fils2 = " + str(fils2+3))
         for i in range(reps):
             ss = tf.keras.optimizers.Adam()
-            # model = alexNet2('glorot_normal', None)
+            model = alexNet2('glorot_normal', 'tanh')
             # model = leNet('lecun_normal', None)
-            model=myNet(16, 64)
+            # model=myNet(16, 64)
             model.compile(loss=tf.keras.losses.categorical_crossentropy, optimizer=ss, metrics=["accuracy"])
-            hist = model.fit(x=x_train,y=y_train, epochs=30, batch_size=128, validation_data=(x_valid, y_valid), verbose=0)
+            hist = model.fit(x=x_train,y=y_train, epochs=30, batch_size=128, validation_data=(x_valid, y_valid), verbose=1)
 
             ######## EVALUATE ########
             test_score = model.evaluate(x_test, y_test)
