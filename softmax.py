@@ -3,6 +3,7 @@ from scipy.stats import gennorm
 
 import ILayer as interface
 from Optimizer import AdamOptimizer
+from Optimizer import SGD
 
 class Softmax(interface.ILayer):
 
@@ -17,6 +18,7 @@ class Softmax(interface.ILayer):
         self.inp = []
         self.totals = []
         self.adam = AdamOptimizer(self.weights)
+        self.sgd = SGD(self.weights)
 
     def initializeWeights(self, type='xavier_uniform'):
         n_in = self.prev_layer_size

@@ -92,9 +92,9 @@ def alexNet():
   return cnn
 
 def BranoNet():
-  cnn = CNN(2, loss='bin_loss3')
+  cnn = CNN(2, loss='bin_loss2')
   conv1 = Conv(1,16,3,stride=2, initializer='he_uniform',activation='comb')
-  pool1 = Pool(3,3,'max2')
+  pool1 = Pool(3,3,'max')
   fc1 = Dense(64, 16*10*10, initializer='he_uniform',activation='comb')
   sm = Softmax(2, 64,initializer='he_uniform')
   cnn.add(conv1)
@@ -203,7 +203,7 @@ def prepareData(thresh, test):
         # img = img.resize((28, 28))
         img = img.resize((64, 64))
         image = numpy.array(img)
-        # if i > thresh:
+        if i > thresh:
         #     if test:
         #         j+=1
         #         if j > 100:
@@ -212,7 +212,7 @@ def prepareData(thresh, test):
         #             test_data.append(image)
         #             test_labels.append(0)
         #     else:
-        #         break
+            break
         # else:
         train_data.append(image)
         train_labels.append(0)
@@ -227,7 +227,7 @@ def prepareData(thresh, test):
         # img = img.resize((28, 28))
         img = img.resize((64, 64))
         image = numpy.array(img)
-        # if i > thresh:
+        if i > thresh:
         #     if test:
         #         j+=1
         #         if j > 100:
@@ -236,7 +236,7 @@ def prepareData(thresh, test):
         #             test_data.append(image)
         #             test_labels.append(1)
         #     else:
-        #         break
+            break
         # else:
         test_data.append(image)
         test_labels.append(1)
@@ -246,8 +246,8 @@ def prepareData(thresh, test):
     #     img = Image.open(img).convert(mode = 'L')
     #     # img = Image.open(img).convert(mode = 'RGB')
     #     # img = img.resize((224, 224))
-    #     img = img.resize((28, 28))
-    #     # img = img.resize((64, 64))
+    #     # img = img.resize((28, 28))
+    #     img = img.resize((64, 64))
     #     image = numpy.array(img)
     #     test_data.append(image)
     #     test_labels.append(0)

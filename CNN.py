@@ -74,7 +74,7 @@ class CNN:
             total_loss += loss
             gradients.append(gradient)
         loss = total_loss / len(batch)
-        if self.num_outputs == 2:
+        if self.num_outputs != 2:
             total_acc = total_acc / len(batch)
         return gradients, loss, total_acc
 
