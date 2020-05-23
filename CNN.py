@@ -25,18 +25,18 @@ class CNN:
                 acc = 1 if numpy.argmax(output) == label else 0
             loss = -numpy.log(output[label])
             gradient[label] = -1 / output[label]
-        elif self.loss == 'bin_loss1':
+        elif self.loss == 'dbce':
             acc[label][numpy.argmax(output)] = 1
             p = numpy.zeros(2)
             p[label] = 1.0
             loss = (-p[0] * numpy.log(output[0])) - (p[1] * numpy.log(output[1]) / output[1])
             gradient[label] = (p[0] * (-1 / output[0])) + (p[1] * (numpy.log(output[1]) - 1.0) / output[1] ** 2)
-        elif self.loss == 'bin_loss2':
+        elif self.loss == 'sensce':
             acc[label][numpy.argmax(output)] = 1
             x = output[label]
             loss = -numpy.log(x) / (1 - (label - x))
             gradient[label] = (-x + (x * numpy.log(x)) + label - 1) / (x * (x - label + 1) ** 2)
-        elif self.loss == 'bin_loss3':
+        elif self.loss == 'sbce':
             thresh = 0.5
             acc[label][numpy.argmax(output)] = 1
             p = numpy.zeros(2)
@@ -78,12 +78,12 @@ class CNN:
             total_acc = total_acc / len(batch)
         return gradients, loss, total_acc
 
-    def train3(self, im, label, lr=.01):
+    def train(self, im, label, lr=.01, optimizer='SGD'):
         gradients, loss, acc = self.forwardBatch(im, label)
 
         for i in range(len(self.layers) - 1, 0, -1):
             layer = self.layers[i]
             gradients = layer.backward(gradients)
-            layer.updateWeights(lr)
+            layer.updateWeights(lr, optimizer)
 
         return loss, acc

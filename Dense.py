@@ -1,17 +1,19 @@
 import ILayer as interface
 import numpy
 from Optimizer import AdamOptimizer
+from Optimizer import SGD
 from Initializer import Initializer
 
 
 class Dense(interface.ILayer):
-    def __init__(self, layer_size, prev_layer_size, initializer='xavier_uniform', activation='relu'):
+    def __init__(self, layer_size, prev_layer_size, initializer='xavier_uniform', activation='relu', seed=True):
         self.activation = activation
         self.layer_size = layer_size
         self.prev_layer_size = prev_layer_size
         self.activations = []
         self.weights = []
-        numpy.random.seed(1000)
+        if seed:
+            numpy.random.seed(1000)
         shape = [prev_layer_size, layer_size]
         init = Initializer(prev_layer_size, layer_size, shape, initializer)
         self.weights = init.initializeWeights()
@@ -19,6 +21,7 @@ class Dense(interface.ILayer):
         self.last_input = []
         self.gradients = []
         self.adam = AdamOptimizer(self.weights)
+        self.sgd = SGD(self.weights)
         numpy.seterr('raise')
 
     def __calculate_potential__(self, inputs):
@@ -47,7 +50,7 @@ class Dense(interface.ILayer):
         return numpy.cbrt(potential)
 
     @staticmethod
-    def __activate_comb__(potential):
+    def __activate_leakytrelu__(potential):
         result = potential
         index1 = potential >= 0
         index2 = potential < 0
@@ -56,7 +59,7 @@ class Dense(interface.ILayer):
         return result
 
     @staticmethod
-    def __activate_comb2__(potential):
+    def __activate_sqcbrt__(potential):
         result = potential
         index1 = potential >= 0
         index2 = potential < 0
@@ -90,7 +93,7 @@ class Dense(interface.ILayer):
         return 1.0/(3*numpy.cbrt(numpy.power(activation, 2)))
 
     @staticmethod
-    def __derivative_comb__(activation):
+    def __derivative_leakytrelu__(activation):
         result = activation
         index1 = activation >= 0
         index2 = activation < 0
@@ -99,7 +102,7 @@ class Dense(interface.ILayer):
         return result
 
     @staticmethod
-    def __derivative_comb2__(activation):
+    def __derivative_sqcbrt__(activation):
         result = activation
         index1 = activation > 0
         index2 = activation < 0
@@ -137,13 +140,18 @@ class Dense(interface.ILayer):
     def backward(self, prev_layer):
         return self.backprop(prev_layer)
 
-    def updateWeights(self, learn_rate):
+    def updateWeights(self, learn_rate, optimizer):
         gradient = self.gradients
         d_t_d_w = numpy.array(self.last_input)
         d_L_d_w = d_t_d_w.T @ gradient
         d_L_d_w = 1 / (len(self.gradients)) * d_L_d_w
         gradient = numpy.sum(self.gradients, axis=0) / len(self.gradients)
-        self.weights = self.adam.backward_pass(d_L_d_w)
+        if optimizer == 'Adam':
+            # self.adam.alpha = learn_rate
+            self.weights = self.adam.backward_pass(d_L_d_w)
+        elif optimizer == 'SGD':
+            self.sgd.learn_rate = learn_rate
+            self.weights = self.sgd.backward_pass(d_L_d_w)
         self.biases -= learn_rate * gradient
         self.gradients = []
         self.last_input = []

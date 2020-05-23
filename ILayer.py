@@ -12,5 +12,5 @@ class ILayer:
         raise NotImplementedError
 
     @abstractmethod
-    def updateWeights(self, learn_rate):
+    def updateWeights(self, learn_rate, optimizer):
         raise NotImplementedError

@@ -2,12 +2,14 @@ import ILayer as interface
 import numpy
 from Initializer import Initializer
 from Optimizer import AdamOptimizer
+from Optimizer import SGD
 
 
 class Conv(interface.ILayer):
     def __init__(self, prev_layer_size, num_filters, filter_size, stride=1, padding=0, initializer='xavier_uniform',
-                 activation=None):
-        numpy.random.seed(10 + prev_layer_size * num_filters)
+                 activation=None, seed=True):
+        if seed:
+            numpy.random.seed(10 + prev_layer_size * num_filters)
         self.num_filters = num_filters
         self.filter_size = filter_size
         self.stride = stride
@@ -23,6 +25,7 @@ class Conv(interface.ILayer):
         self.inp = []
         self.output = []
         self.adam = AdamOptimizer(self.filters)
+        self.sgd = SGD(self.filters)
 
     def activate(self, output):
         self.output = self.__getattribute__("__activate_" + self.activation + "__")(output)
@@ -46,7 +49,7 @@ class Conv(interface.ILayer):
         return numpy.cbrt(potential)
 
     @staticmethod
-    def __activate_comb__(potential):
+    def __activate_leakytrelu__(potential):
         result = potential
         index1 = potential >= 0
         index2 = potential < 0
@@ -56,7 +59,7 @@ class Conv(interface.ILayer):
         return result
 
     @staticmethod
-    def __activate_comb2__(potential):
+    def __activate_sqcbrt__(potential):
         result = potential
         index1 = potential >= 0
         index2 = potential < 0
@@ -91,7 +94,7 @@ class Conv(interface.ILayer):
         return 1.0 / (3 * numpy.cbrt(numpy.power(activation, 2)))
 
     @staticmethod
-    def __derivative_comb__(activation):
+    def __derivative_leakytrelu__(activation):
         result = activation
         index1 = activation >= 0
         index2 = activation < 0
@@ -100,7 +103,7 @@ class Conv(interface.ILayer):
         return result
 
     @staticmethod
-    def __derivative_comb2__(activation):
+    def __derivative_sqcbrt__(activation):
         result = activation
         index1 = activation > 0
         index2 = activation < 0
@@ -167,7 +170,7 @@ class Conv(interface.ILayer):
         d_L_d_input = d_L_d_input / m
         return d_L_d_input
 
-    def filterSet(self, d_L_d_out):
+    def filterSet(self, d_L_d_out, optimizer):
         x = numpy.moveaxis(self.input, 1, -1)
         x_padded_bcast = numpy.expand_dims(x, axis=-1)
         dz = numpy.moveaxis(d_L_d_out, 1, -1)
@@ -179,7 +182,10 @@ class Conv(interface.ILayer):
                     dZ_bcast * x_padded_bcast[:, a:a + self.width,
                                b:b + self.height, :, :], axis=(0, 1, 2))
                 d_L_d_filters[:, :, a, b] = asd.swapaxes(0, 1)
-        self.filters = self.adam.backward_pass(d_L_d_filters)
+        if optimizer == 'Adam':
+            self.filters = self.adam.backward_pass(d_L_d_filters)
+        elif optimizer == 'SGD':
+            self.filters = self.sgd.backward_pass(d_L_d_filters)
 
     def forward(self, prev_layer):
         self.inp = prev_layer
@@ -194,9 +200,11 @@ class Conv(interface.ILayer):
             prev_layer = prev_layer * self.derivate()
         return self.backprop(prev_layer)
 
-    def updateWeights(self, learn_rate):
+    def updateWeights(self, learn_rate, optimizer):
         gradient = self.gradients
         self.input = numpy.array(self.inp)
-        self.filterSet(gradient)
+        self.sgd.learn_rate = learn_rate
+        # self.adam.alpha = learn_rate
+        self.filterSet(gradient, optimizer)
         self.gradients = []
         self.inp = []

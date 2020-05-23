@@ -2,10 +2,10 @@ import mnist
 import numpy
 import glob
 from CNN import CNN
-from convolutional import Conv
-from pool import Pool
-from softmax import Softmax
-from dense import Dense
+from Convolutional import Conv
+from Pool import Pool
+from Softmax import Softmax
+from Dense import Dense
 from PIL import Image
 from shutil import copyfile
 import csv
@@ -29,18 +29,18 @@ def leNetExp():
   return cnn
 
 def leNet():
-  cnn = CNN(2, loss='bin_loss3')
+  cnn = CNN(2, loss='sbce')
   # conv1 = Conv(1,8,3)
   # pool1 = Pool(2,2,'max')
   # sm = Softmax(10, 13 * 13 * 8)
-  conv1 = Conv(1,6,5,initializer='xavier_gennorm',activation='comb2')
+  conv1 = Conv(1,6,5,initializer='xavier_gennorm',activation='sqcbrt')
   pool1 = Pool(2,2,'max2')
-  conv2 = Conv(6,16,5,initializer='xavier_gennorm',activation='comb2')
+  conv2 = Conv(6,16,5,initializer='xavier_gennorm',activation='sqcbrt')
   pool2 = Pool(2,2,'max2')
-  conv3 = Conv(16,120,4,initializer='xavier_gennorm',activation='comb2')
+  conv3 = Conv(16,120,4,initializer='xavier_gennorm',activation='sqcbrt')
   # pool3 = Pool(2,2,'max')
   # fc1 = CNNLayer(84, 120, 'tanh')
-  fc1 = Dense(84, 120, initializer='xavier_gennorm',activation='comb2')
+  fc1 = Dense(84, 120, initializer='xavier_gennorm',activation='sqcbrt')
   sm = Softmax(2, 84,initializer='xavier_gennorm')
   cnn.add(conv1)
   cnn.add(pool1)
@@ -92,10 +92,10 @@ def alexNet():
   return cnn
 
 def BranoNet():
-  cnn = CNN(2, loss='bin_loss2')
-  conv1 = Conv(1,16,3,stride=2, initializer='he_uniform',activation='comb')
+  cnn = CNN(2, loss='sensce')
+  conv1 = Conv(1,16,3,stride=2, initializer='he_uniform',activation='leakytrelu')
   pool1 = Pool(3,3,'max')
-  fc1 = Dense(64, 16*10*10, initializer='he_uniform',activation='comb')
+  fc1 = Dense(64, 16*10*10, initializer='he_uniform',activation='leakytrelu')
   sm = Softmax(2, 64,initializer='he_uniform')
   cnn.add(conv1)
   cnn.add(pool1)
@@ -150,7 +150,7 @@ def mnist_test():
                 im = numpy.swapaxes(im[numpy.newaxis], 0,1)
                 label = train_labels[i * batch_size: (i+1)*batch_size]
                 # label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
-                l, acc = cnn.train3(im, label)
+                l, acc = cnn.train(im, label)
                 loss += l
                 num_correct += acc
 
@@ -203,7 +203,7 @@ def prepareData(thresh, test):
         # img = img.resize((28, 28))
         img = img.resize((64, 64))
         image = numpy.array(img)
-        if i > thresh:
+        # if i > thresh:
         #     if test:
         #         j+=1
         #         if j > 100:
@@ -212,7 +212,7 @@ def prepareData(thresh, test):
         #             test_data.append(image)
         #             test_labels.append(0)
         #     else:
-            break
+        #     break
         # else:
         train_data.append(image)
         train_labels.append(0)
@@ -227,7 +227,7 @@ def prepareData(thresh, test):
         # img = img.resize((28, 28))
         img = img.resize((64, 64))
         image = numpy.array(img)
-        if i > thresh:
+        # if i > thresh:
         #     if test:
         #         j+=1
         #         if j > 100:
@@ -236,21 +236,21 @@ def prepareData(thresh, test):
         #             test_data.append(image)
         #             test_labels.append(1)
         #     else:
-            break
+        #     break
         # else:
         test_data.append(image)
         test_labels.append(1)
 
-    # for img in others:
-    #     i += 1
-    #     img = Image.open(img).convert(mode = 'L')
-    #     # img = Image.open(img).convert(mode = 'RGB')
-    #     # img = img.resize((224, 224))
-    #     # img = img.resize((28, 28))
-    #     img = img.resize((64, 64))
-    #     image = numpy.array(img)
-    #     test_data.append(image)
-    #     test_labels.append(0)
+    for img in others:
+        i += 1
+        img = Image.open(img).convert(mode = 'L')
+        # img = Image.open(img).convert(mode = 'RGB')
+        # img = img.resize((224, 224))
+        # img = img.resize((28, 28))
+        img = img.resize((64, 64))
+        image = numpy.array(img)
+        test_data.append(image)
+        test_labels.append(0)
 
     return numpy.array(train_data), numpy.array(train_labels), numpy.array(test_data), numpy.array(test_labels)
 
@@ -308,7 +308,7 @@ def skinTest():
                 # im = numpy.swapaxes(im, 3, 1)
                 # im = numpy.swapaxes(im, 2, 3)
                 # label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
-                l, accs = cnn.train3(im, label)
+                l, accs = cnn.train(im, label, optimizer='Adam')
                 stats+=accs
                 acc = (accs[0,0]+accs[1,1]) / numpy.sum(accs)
                 loss += l
@@ -407,7 +407,7 @@ def expTest():
                 # im = numpy.swapaxes(im, 3, 1)
                 # im = numpy.swapaxes(im, 2, 3)
                 # label = numpy.swapaxes(label[numpy.newaxis], 0, 1)
-                l, acc = cnn.train3(im, label)
+                l, acc = cnn.train(im, label)
                 # stats+=accs
                 # acc = (accs[0,0]+accs[1,1]) / numpy.sum(accs)
                 loss += l

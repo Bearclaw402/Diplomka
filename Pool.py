@@ -107,5 +107,5 @@ class Pool(interface.ILayer):
     def backward(self, d_L_d_out):
         return self.poolBW(d_L_d_out)
 
-    def updateWeights(self, leran_rate):
+    def updateWeights(self, learn_rate, optimizer):
         pass
